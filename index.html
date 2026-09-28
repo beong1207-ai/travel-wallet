@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>여행 환율수첩</title>
+<meta name="theme-color" content="#EAF3FA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1A28" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="환율수첩">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&family=Jua&family=Nunito:wght@700;800&display=swap">
+<style>
+:root{
+  --ground:#EAF3FA; --paper:#FFFFFF; --ink:#1B2A3A; --muted:#667A8F; --line:#D5E2EE;
+  --jade:#F2604F; --jade-soft:#FFE5E0; --stamp:#FFC94D; --stamp-ink:#3B2A00; --danger:#D6453A; --good:#1F9D74;
+  --hero:#2C7BE5; --hero-ink:#FFFFFF;
+  --sans:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"Nunito","IBM Plex Sans KR",system-ui,sans-serif;
+  --display:"Jua","IBM Plex Sans KR",system-ui,sans-serif;
+  --r:22px; --r2:16px; --r3:12px; --shadow:0 10px 30px -18px rgba(30,70,120,.45);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --ground:#0E1A28; --paper:#172738; --ink:#EAF2FA; --muted:#93A7BC; --line:#28405A;
+  --jade:#FF7B6B; --jade-soft:#3A2429; --stamp:#FFC94D; --stamp-ink:#2E2100; --danger:#FF8A7E; --good:#4FD1A5;
+  --hero:#2463B8; --hero-ink:#FFFFFF; --shadow:none;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0E1A28; --paper:#172738; --ink:#EAF2FA; --muted:#93A7BC; --line:#28405A;
+  --jade:#FF7B6B; --jade-soft:#3A2429; --stamp:#FFC94D; --stamp-ink:#2E2100; --danger:#FF8A7E; --good:#4FD1A5;
+  --hero:#2463B8; --hero-ink:#FFFFFF; --shadow:none;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:480px;margin:0 auto;padding-inline:16px;padding-block:20px 40px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+h1{font-size:20px;margin:0;letter-spacing:-.01em}
+.src{font-size:12px;color:var(--muted);text-align:right}
+.label{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.04em;margin:0 0 8px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* 나라 선택 */
+.picker{position:relative}
+.pick-btn{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r2);border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;cursor:pointer;text-align:left}
+.pick-btn .code{font-family:var(--mono);font-size:12px;font-weight:600;background:var(--jade);color:var(--paper);border-radius:6px;padding:3px 6px}
+.pick-btn b{font-size:16px;font-weight:700;flex:1}
+.pick-btn .chev{color:var(--muted);transition:transform .15s}
+.pick-btn[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.menu{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:20;background:var(--paper);border:1px solid var(--line);border-radius:var(--r2);box-shadow:0 16px 40px -12px rgba(10,40,34,.45);max-height:min(60vh,420px);overflow-y:auto;padding:6px}
+.opt{width:100%;display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:10px;padding:10px;border:0;border-radius:8px;background:transparent;color:var(--ink);font:inherit;cursor:pointer;text-align:left}
+.opt:hover,.opt:focus-visible{background:var(--jade-soft)}
+.opt .c{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.opt .r{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.opt[aria-selected="true"]{background:var(--jade-soft)}
+.opt[aria-selected="true"] .c{color:var(--jade);font-weight:600}
+button:focus-visible,input:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+
+/* 환산 카드 (티켓) */
+.ticket{background:var(--paper);border-radius:var(--r);position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.t-top{padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px}
+.rate-row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.rate{font-family:var(--mono);font-size:14px}
+.rate small{color:var(--muted);font-family:var(--sans)}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--jade-soft);color:var(--jade);font-weight:500}
+.tag.custom{background:var(--stamp);color:var(--stamp-ink)}
+.inputline{display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--ink);padding-bottom:6px}
+.inputline input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font-family:var(--mono);font-size:30px;font-weight:600;padding:0}
+.inputline input:focus{outline:none}
+.inputline .unit{font-size:16px;font-weight:700}
+.swap{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:6px 8px;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+.quick button{border:1px dashed var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:5px 10px;font-family:var(--mono);font-size:12px;cursor:pointer}
+.quick button:hover{border-color:var(--jade);color:var(--jade)}
+.perf{height:0;border-top:2px dashed var(--line);margin:0 14px;position:relative}
+.perf::before,.perf::after{content:"";position:absolute;top:-11px;width:20px;height:20px;border-radius:50%;background:var(--ground)}
+.perf::before{left:-24px}.perf::after{right:-24px}
+.t-bot{padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px}
+.result{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.result .big{font-family:var(--mono);font-size:34px;font-weight:600;line-height:1.1;word-break:break-all}
+.result .big mark{background:linear-gradient(transparent 55%,var(--stamp) 55%);color:inherit;padding:0 2px}
+.result .cap{font-size:13px;color:var(--muted)}
+.log-row{display:flex;gap:8px}
+.log-row input{flex:1;min-width:0;border:1px solid var(--line);border-radius:var(--r3);padding:10px 12px;background:var(--ground);color:var(--ink);font:inherit}
+.primary{border:0;border-radius:var(--r3);padding:10px 16px;background:var(--jade);color:#fff;font:inherit;font-weight:700;cursor:pointer;white-space:nowrap}
+.primary:active{transform:translateY(1px)}
+
+/* 환전 비교 */
+.fx{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.fx h2{font-size:16px;margin:0}
+.fx .sub{font-size:13px;color:var(--muted);margin:2px 0 0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r3);padding:3px;gap:3px;background:var(--ground)}
+.seg button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:500;padding:6px 14px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.field label{font-size:13px;font-weight:500}
+.money{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:var(--r3);background:var(--ground);padding:8px 12px}
+.money input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font-family:var(--mono);font-size:20px;font-weight:600;padding:0}
+.money input:focus{outline:none}
+.money:focus-within{outline:2px solid var(--jade);outline-offset:1px}
+.money span{font-weight:700;font-size:14px}
+.hint{font-size:12px;color:var(--muted)}
+.verdict{border-radius:var(--r2);padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--ground)}
+.verdict .head{font-size:15px;font-weight:700}
+.verdict.good .head{color:var(--good)}
+.verdict.bad .head{color:var(--danger)}
+.cmp{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.cmp dt{color:var(--muted)}
+.cmp dd{margin:0;text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.cmp dd.diff{font-weight:600}
+.verdict.good .cmp dd.diff{color:var(--good)}.verdict.bad .cmp dd.diff{color:var(--danger)}
+.fx-actions{display:flex;gap:8px;flex-wrap:wrap}
+.secondary{border:1px solid var(--ink);border-radius:var(--r3);padding:9px 14px;background:transparent;color:var(--ink);font:inherit;font-weight:500;cursor:pointer}
+.fx-sum{display:grid;gap:2px;border-top:2px solid var(--ink);padding-top:12px}
+.fx-sum .k{font-size:13px;font-weight:500}
+.fx-sum .v{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.fx-sum .v b{font-size:22px}
+.fx-sum .v small{display:block;font-size:12px;color:var(--muted)}
+.gotkrw-strong{color:var(--ink);font-family:var(--mono);font-weight:600}
+.fx-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.fx-list li{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:13px}
+.fx-list .d{font-family:var(--mono);font-weight:600;text-align:right}
+.fx-list .d.good{color:var(--good)}.fx-list .d.bad{color:var(--danger)}
+/* 지출 기록 */
+.spend-head{display:flex;justify-content:space-between;align-items:flex-end;gap:8px 12px;flex-wrap:wrap}
+.total{text-align:right;white-space:nowrap;margin-left:auto}
+.total .num{font-size:22px;font-weight:600}
+.total small{display:block;font-size:12px;color:var(--muted)}
+.list{list-style:none;margin:0;padding:0;background:var(--paper);border-radius:var(--r2);border:1px solid var(--line)}
+.list li{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
+.list li:first-child{border-top:0}
+.memo{font-weight:500;overflow-wrap:anywhere}
+.meta{font-size:12px;color:var(--muted)}
+.amt{text-align:right}
+.amt .krw{font-family:var(--mono);font-weight:600}
+.amt .loc{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.del{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:4px 6px;border-radius:6px}
+.del:hover{color:var(--danger)}
+.empty{padding:22px 16px;text-align:center;color:var(--muted);font-size:14px}
+.foot{font-size:12px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* 결제수단 */
+.pay{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pay button{border:1px solid var(--line);background:var(--ground);color:var(--ink);border-radius:var(--r3);padding:8px 6px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:0;line-height:1.3}
+.pay button small{font-size:11px;color:var(--muted);font-weight:400;font-family:var(--mono)}
+.pay button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.pay button[aria-pressed="true"] small{color:var(--paper);opacity:.75}
+.gln-box{display:flex;flex-direction:column;gap:8px;background:var(--ground);border-radius:var(--r3);padding:10px 12px}
+.gln-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.gln-line input{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--paper);color:var(--ink);font-family:var(--mono);font-size:14px}
+.gln-line input.fee{width:64px}
+.gln-line input.act{width:130px}
+.warn{font-size:12px;color:var(--muted);border-left:3px solid var(--stamp);padding-left:8px}
+
+/* 지갑 요약 */
+.wallets{display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--line);border-radius:var(--r2)}
+.wallet{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:0 12px;padding:10px 14px;border-top:1px solid var(--line)}
+.wallet:first-child{border-top:0}
+.wallet .k{font-size:13px;font-weight:500}
+.wallet .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:17px;text-align:right;white-space:nowrap}
+.wallet .s{grid-column:1/-1;font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.wallet.neg .v{color:var(--danger)}
+.badge{display:inline-block;font-size:11px;font-weight:500;border-radius:5px;padding:0 6px;margin-right:4px;background:var(--jade-soft);color:var(--jade)}
+.badge.gln{background:var(--stamp);color:var(--stamp-ink)}
+.badge.travel{background:var(--ink);color:var(--paper)}
+.est{border:1px dashed var(--danger);color:var(--danger);background:transparent;border-radius:6px;font:inherit;font-size:11px;padding:1px 6px;cursor:pointer;margin-top:2px}
+.confirm-row{grid-column:1/-1;display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:13px}
+.confirm-row input{width:130px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--ground);color:var(--ink);font-family:var(--mono)}
+.confirm-row button{border:0;border-radius:8px;padding:6px 12px;background:var(--ink);color:var(--paper);font:inherit;font-size:13px;cursor:pointer}
+
+/* 카테고리 */
+.cats{display:flex;gap:6px;flex-wrap:wrap}
+.cats button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:99px;padding:5px 11px;font:inherit;font-size:13px;cursor:pointer}
+.cats button[aria-pressed="true"]{background:var(--jade);border-color:var(--jade);color:var(--paper);font-weight:500}
+.cat-tag{font-size:12px;color:var(--muted);margin-left:6px}
+
+/* 여행 한눈에 */
+.trip{background:var(--hero);color:var(--hero-ink);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.trip .dates{display:flex;align-items:center;gap:6px;font-size:13px}
+.trip input[type=date]{flex:1 1 0;min-width:0;border:1px solid rgba(255,255,255,.25);background:transparent;color:inherit;border-radius:8px;padding:4px 8px;font:inherit;font-size:13px;color-scheme:dark}
+.trip .day{font-size:12px;background:var(--stamp);color:var(--stamp-ink);border-radius:99px;padding:2px 9px;font-weight:700}
+.trip .big{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:34px;font-weight:600;line-height:1.1}
+.trip .row{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.trip .k{font-size:12px;opacity:.75}
+.trip .k-row{display:flex;align-items:center;gap:6px}
+.trip .avg{text-align:right;font-family:var(--mono);font-size:14px}
+.progress{height:6px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--stamp);border-radius:99px}
+.trip .note{font-size:12px;opacity:.7}
+
+/* 결산 */
+.report{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:18px}
+.report h2{font-size:16px;margin:0}
+.report h3{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 8px;letter-spacing:.02em}
+.bars{display:grid;grid-template-columns:78px 1fr auto;gap:7px 10px;align-items:center;font-size:13px}
+.bar{display:contents}
+.bars .hint{grid-column:1/-1}
+.bar .t{height:14px;background:var(--ground);border-radius:0 4px 4px 0;overflow:hidden}
+.bar .t i{display:block;height:100%;background:var(--jade);border-radius:0 4px 4px 0;min-width:2px}
+.bar .n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.bar .n small{color:var(--muted);margin-left:4px}
+.days{display:flex;align-items:flex-end;gap:4px;height:120px;padding-top:18px;overflow-x:auto}
+.dcol{flex:1 0 30px;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;position:relative}
+.dcol .v{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
+.dcol i{display:block;width:70%;max-width:26px;background:var(--jade);border-radius:4px 4px 0 0;min-height:2px}
+.dcol.zero i{background:var(--line)}
+.dcol.today i{background:var(--ink)}
+.dcol .l{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.kv dd.bad{color:var(--danger)}.kv dd.good{color:var(--good)}
+
+/* 백업 */
+.backup{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.backup h2{font-size:16px;margin:0}
+.backup .btns{display:flex;gap:8px;flex-wrap:wrap}
+.backup .status{font-size:13px;color:var(--muted);min-height:1.2em}
+.backup .status.err{color:var(--danger)}
+.import-confirm{display:flex;flex-direction:column;gap:8px;background:var(--stamp);color:var(--stamp-ink);border-radius:var(--r3);padding:10px 12px;font-size:13px}
+.import-confirm .btns button{border:0;border-radius:8px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer;background:var(--stamp-ink);color:var(--stamp)}
+.import-confirm .btns button.no{background:transparent;color:var(--stamp-ink);text-decoration:underline}
+.filebtn{position:relative;overflow:hidden}
+.filebtn:focus-within{outline:2px solid var(--jade);outline-offset:2px}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* 공통 추가 */
+h1,h2,.pick-btn b{font-family:var(--display);font-weight:700}
+h1{font-size:24px}
+.trip .big,.result .big{font-weight:800}
+.fx,.report,.backup,.wallets,.list,.pick-btn{box-shadow:var(--shadow)}
+.fx,.report,.backup,.wallets,.list,.pick-btn{border-color:transparent}
+
+/* 아래 탭 */
+.wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--paper);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom, 0px))}
+.tabbar .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tabbar button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:500;padding:6px 0 4px;border-radius:var(--r3);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-selected="true"]{color:var(--jade)}
+.tabbar button[aria-selected="true"] svg{stroke-width:2.3}
+.log-row input,.gln-line input,.confirm-row input,.trip input[type=date]{font-size:16px}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>여행 환율수첩</h1>
+    <div class="src" id="src"></div>
+  </header>
+
+  <section>
+    <p class="label">어디로 가세요?</p>
+    <div class="picker" id="picker">
+      <button class="pick-btn" id="pickBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="menu">
+        <span class="code" id="pickCode">VND</span><b id="pickName">베트남</b><span class="chev" aria-hidden="true">▾</span>
+      </button>
+      <div class="menu" id="menu" role="listbox" aria-label="여행 국가" hidden></div>
+    </div>
+  </section>
+
+  <section class="trip" aria-label="여행 한눈에" data-tab="home">
+    <div class="dates">
+      <input type="date" id="tripStart" aria-label="여행 시작일"> <span>~</span> <input type="date" id="tripEnd" aria-label="여행 마지막 날">
+    </div>
+    <div class="row">
+      <div><div class="k-row"><span class="k">여행 총 지출</span> <span class="day" id="tripDay"></span></div><div class="big" id="tripTotal">0원</div></div>
+      <div class="avg"><div class="k">하루 평균</div><div id="tripAvg">0원</div></div>
+    </div>
+    <div class="progress" aria-hidden="true"><i id="tripBar" style="width:0"></i></div>
+    <div class="note" id="tripNote"></div>
+  </section>
+
+  <section aria-label="내 지갑" data-tab="home">
+    <p class="label">내 지갑</p>
+    <div class="wallets" id="wallets"></div>
+  </section>
+
+  <section class="ticket" aria-label="환율 계산과 지출 기록" data-tab="home">
+    <div class="t-top">
+      <div class="pay" role="group" aria-label="결제수단" id="pay">
+        <button type="button" data-m="cash" aria-pressed="true">현금<small id="payRate-cash"></small></button>
+        <button type="button" data-m="travel" aria-pressed="false">트래블카드<small id="payRate-travel"></small></button>
+        <button type="button" data-m="gln" aria-pressed="false">GLN<small id="payRate-gln"></small></button>
+      </div>
+      <div class="rate-row">
+        <div class="rate" id="rateText"></div>
+        <span class="tag" id="rateTag"></span>
+      </div>
+      <div class="inputline">
+        <input id="amount" inputmode="decimal" autocomplete="off" aria-label="금액" value="20,000">
+        <span class="unit" id="fromUnit">동</span>
+        <button class="swap" id="swap" type="button" aria-label="방향 바꾸기">⇅ 원화로 입력</button>
+      </div>
+      <div class="quick" id="quick"></div>
+    </div>
+    <div class="perf" aria-hidden="true"></div>
+    <div class="t-bot">
+      <div class="result">
+        <div class="big" id="result"></div>
+        <div class="cap" id="resultCap"></div>
+      </div>
+      <div class="gln-box" id="glnBox" hidden>
+        <div class="gln-line"><label for="glnFee">GLN 수수료</label><input class="fee" id="glnFee" inputmode="decimal" autocomplete="off"><span>%</span><span class="hint">예상 금액 계산에 써요</span></div>
+        <div class="gln-line"><label for="glnActual">앱에 뜬 출금액</label><input class="act" id="glnActual" inputmode="numeric" autocomplete="off" placeholder="선택 입력"><span>원</span></div>
+        <div class="hint">출금액을 넣으면 그 금액으로 확정 기록돼요. 비워 두면 예상으로 저장되고 나중에 고칠 수 있어요.</div>
+      </div>
+      <div class="cats" id="cats" role="group" aria-label="카테고리"></div>
+      <form class="log-row" id="logForm">
+        <input id="memo" placeholder="내용 (예: 쌀국수, 선택)" maxlength="40">
+        <button class="primary" type="submit">지출 기록</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="fx" aria-label="환전과 충전" data-tab="fx">
+    <div class="field-top">
+      <div>
+        <h2>환전 · 충전</h2>
+        <p class="sub" id="fxSub"></p>
+      </div>
+      <div class="seg" role="group" aria-label="기록 종류">
+        <button type="button" id="kindCash" aria-pressed="true">현금 환전</button>
+        <button type="button" id="kindTravel" aria-pressed="false">트래블카드 충전</button>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-top">
+        <label for="paid">낸 돈</label>
+        <div class="seg" role="group" aria-label="낸 돈 통화" id="paySeg">
+          <button type="button" id="payKRW" aria-pressed="true">원화</button>
+          <button type="button" id="payUSD" aria-pressed="false">달러</button>
+        </div>
+      </div>
+      <div class="money"><input id="paid" inputmode="decimal" autocomplete="off" value="500,000"><span id="paidUnit">원</span></div>
+      <div class="quick" id="paidQuick"></div>
+    </div>
+    <div class="field">
+      <label for="got" id="gotLabel">받은 돈</label>
+      <div class="money"><input id="got" inputmode="decimal" autocomplete="off" value="9,450,000"><span id="gotUnit">동</span></div>
+      <div class="hint" id="gotKrw"></div>
+    </div>
+    <div class="verdict" id="verdict" aria-live="polite"></div>
+    <div class="fx-actions">
+      <button class="primary" type="button" id="fxSave">환전 기록 저장</button>
+    </div>
+    <div class="fx-sum" id="fxSum" hidden></div>
+    <ul class="fx-list" id="fxList"></ul>
+  </section>
+
+  <section data-tab="list">
+    <div class="spend-head">
+      <div>
+        <p class="label" style="margin:0">지출 기록</p>
+        <div class="meta" id="spendCount"></div>
+      </div>
+      <div class="total"><small>이번 여행 총 지출</small><span class="num" id="total">0원</span></div>
+    </div>
+    <ul class="list" id="list" style="margin-top:10px"></ul>
+  </section>
+
+  <section class="report" aria-label="여행 결산" data-tab="report">
+    <h2>여행 결산</h2>
+    <div><h3>날짜별</h3><div class="days" id="rDays"></div></div>
+    <div><h3>카테고리별</h3><div class="bars" id="rCats"></div></div>
+    <div><h3>결제수단별</h3><div class="bars" id="rMethods"></div></div>
+    <div><h3>환전 · 충전</h3><dl class="kv" id="rFx"></dl></div>
+  </section>
+
+  <section class="backup" aria-label="백업" data-tab="report">
+    <h2>백업 · 내보내기</h2>
+    <p class="sub" style="margin:0;font-size:13px;color:var(--muted)">기록은 이 기기에만 있어요. 가끔 백업 파일로 저장해 두세요.</p>
+    <div class="btns">
+      <button class="primary" type="button" id="bkJson">백업 파일 저장</button>
+      <button class="secondary" type="button" id="bkCsv">엑셀용 저장 (CSV)</button>
+      <span class="secondary filebtn" role="button">백업 불러오기<input type="file" id="bkFile" accept=".json,application/json" aria-label="백업 파일 선택"></span>
+    </div>
+    <div id="importBox"></div>
+    <div class="status" id="bkStatus" aria-live="polite"></div>
+  </section>
+
+  <p class="foot" id="foot" data-tab="report"></p>
+</div>
+
+<nav class="tabbar" aria-label="메뉴"><div class="in" role="tablist">
+  <button type="button" role="tab" data-go="home"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>홈</button>
+  <button type="button" role="tab" data-go="list"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>지출</button>
+  <button type="button" role="tab" data-go="fx"><svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>환전</button>
+  <button type="button" role="tab" data-go="report"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>결산</button>
+</div></nav>
+
+<script>
+(() => {
+  // 기준 환율: 1 USD 당 각 통화 (open.er-api.com, 2026-09-27 00:02 UTC)
+  let RATES_DATE = "2026.09.27 09:02";
+  let PER_USD = {KRW:1357.047619,VND:25952.106627,JPY:157.453603,THB:33.386191,TWD:31.760288,PHP:62.51088,
+    EUR:0.877506,CNY:6.729032,HKD:7.844666,SGD:1.277794,MYR:4.07567,IDR:17897.896326,AUD:1.423527,GBP:0.755093,USD:1};
+
+  const COUNTRIES = [
+    ["베트남","VND","동",0,1000,[10000,50000,100000,500000]],
+    ["일본","JPY","엔",0,100,[500,1000,3000,10000]],
+    ["태국","THB","바트",0,1,[50,100,500,1000]],
+    ["대만","TWD","대만달러",0,1,[50,100,500,1000]],
+    ["필리핀","PHP","페소",0,1,[100,500,1000,2000]],
+    ["미국","USD","달러",2,1,[5,10,50,100]],
+    ["유럽","EUR","유로",2,1,[5,10,50,100]],
+    ["중국","CNY","위안",2,1,[10,50,100,500]],
+    ["홍콩","HKD","홍콩달러",1,1,[20,50,100,500]],
+    ["싱가포르","SGD","싱가포르달러",2,1,[5,10,50,100]],
+    ["말레이시아","MYR","링깃",2,1,[10,20,50,100]],
+    ["인도네시아","IDR","루피아",0,1000,[10000,50000,100000,500000]],
+    ["호주","AUD","호주달러",2,1,[5,10,50,100]],
+    ["영국","GBP","파운드",2,1,[5,10,20,50]],
+  ].map(([name,code,unit,dp,per,quick]) => ({name,code,unit,dp,per,quick}));
+  const METHODS = {cash:"현금", travel:"트래블카드", gln:"GLN"};
+  const CATS = {food:"식비", cafe:"카페·간식", transport:"교통", shopping:"쇼핑", massage:"마사지", tour:"투어·관광", stay:"숙소", etc:"기타"};
+  const dstr = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const addDays = (s, n) => { const d = new Date(s+"T00:00:00"); d.setDate(d.getDate()+n); return dstr(d); };
+
+  const store = {
+    get(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+    set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  };
+
+  const state = {
+    code: store.get("tw.code","VND"),
+    reverse: false,
+    method: store.get("tw.method","cash"),
+    glnFee: store.get("tw.glnFee", 0),
+    kind: "cash",
+    payCur: "KRW",
+    editing: null,
+    expenses: store.get("tw.expenses",[]).map(e => ({method:"cash", confirmed:true, cat:"etc", ...e})),
+    cat: store.get("tw.cat","food"),
+    trip: store.get("tw.trip", null) || {start: dstr(new Date()), end: addDays(dstr(new Date()), 4)},
+    pendingImport: null,
+    fx: store.get("tw.fx",[]).map(x => ({kind:"cash", paidKrw: x.paidKrw ?? x.got * x.effKrwPer, ...x})),
+  };
+  state.fxCode = state.code;
+
+  const $ = id => document.getElementById(id);
+
+  /* ── 실시간 환율: 저장된 값 → 온라인이면 새로 받아오기 ── */
+  let rateStatus = `환율 ${RATES_DATE} 기준`;
+  const fmtStamp = ms => { const d = new Date(ms); return `${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
+  const cachedRates = store.get("tw.rates", null);
+  if (cachedRates && cachedRates.rates && cachedRates.rates.KRW){
+    PER_USD = {...PER_USD, ...cachedRates.rates}; RATES_DATE = fmtStamp(cachedRates.updated);
+    rateStatus = `환율 ${RATES_DATE} 기준`;
+  }
+  let lastTry = 0;
+  async function refreshRates(force){
+    if (!force && Date.now() - lastTry < 10*60*1000) return;
+    lastTry = Date.now();
+    if (!navigator.onLine){ rateStatus = `오프라인 · 환율 ${RATES_DATE} 기준`; $("src").textContent = rateStatus; return; }
+    $("src").textContent = "환율 불러오는 중…";
+    try {
+      const res = await fetch("https://open.er-api.com/v6/latest/USD", {cache:"no-store"});
+      const j = await res.json();
+      if (j.result !== "success" || !j.rates || !j.rates.KRW) throw new Error("bad");
+      const keep = {}; Object.keys(PER_USD).forEach(k => { if (j.rates[k]) keep[k] = j.rates[k]; });
+      PER_USD = {...PER_USD, ...keep};
+      const updated = (j.time_last_update_unix || Date.now()/1000) * 1000;
+      store.set("tw.rates", {rates: keep, updated, fetched: Date.now()});
+      RATES_DATE = fmtStamp(updated); rateStatus = `실시간 환율 · ${RATES_DATE} 기준`;
+      renderAll(); showTab(tab);
+    } catch(e){
+      rateStatus = `환율 업데이트 실패 · ${RATES_DATE} 기준`; $("src").textContent = rateStatus;
+    }
+  }
+  const cur = () => COUNTRIES.find(c => c.code === state.code) || COUNTRIES[0];
+  const byCode = code => COUNTRIES.find(c => c.code === code) || {name:code, code, unit:code, dp:2, per:1, quick:[1]};
+  const market = code => PER_USD.KRW / PER_USD[code];
+  const fmt = (n, dp=0) => n.toLocaleString("ko-KR",{minimumFractionDigits:0,maximumFractionDigits:dp});
+  const parse = s => { const n = parseFloat(String(s).replace(/[^\d.]/g,"")); return isFinite(n) ? n : 0; };
+  const sign = n => (n > 0 ? "+" : n < 0 ? "−" : "");
+  const when = ts => { const d = new Date(ts); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
+  const rateTxt = (code, krwPer) => { const c = byCode(code), v = krwPer * c.per; return `${fmt(c.per)}${c.unit} = ${fmt(v, v < 100 ? 2 : 0)}원`; };
+  const save = () => { store.set("tw.expenses", state.expenses); store.set("tw.fx", state.fx); };
+
+  // 지갑: 현금(환전 기록), 트래블카드(충전 기록)
+  function wallet(code, kind){
+    const recs = state.fx.filter(x => x.code === code && x.kind === kind);
+    const got = recs.reduce((a,x)=>a+x.got,0), paidKrw = recs.reduce((a,x)=>a+x.paidKrw,0);
+    const spent = state.expenses.filter(e => e.code === code && e.method === kind).reduce((a,e)=>a+e.amount,0);
+    return {n: recs.length, got, paidKrw, rate: got > 0 ? paidKrw/got : null, spent, balance: got - spent};
+  }
+  // 결제수단별 원화 환산 비율 (현지 1단위당 원)
+  function methodRate(code, m){
+    if (m === "gln") return {rate: market(code) * (1 + state.glnFee/100), src: `시장 환율 + 수수료 ${fmt(state.glnFee,2)}%`, est:true};
+    const w = wallet(code, m);
+    if (w.rate) return {rate: w.rate, src: m === "cash" ? `내 환전 평균 (${w.n}회)` : `내 충전 평균 (${w.n}회)`};
+    return {rate: market(code), src: m === "cash" ? "환전 기록 없음 · 시장 환율" : "충전 기록 없음 · 시장 환율", fallback:true};
+  }
+
+  /* ── 나라 선택 ── */
+  function renderCountries(){
+    const c0 = cur();
+    $("pickCode").textContent = c0.code; $("pickName").textContent = c0.name;
+    const box = $("menu"); box.textContent = "";
+    COUNTRIES.forEach(c => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "opt"; b.setAttribute("role","option");
+      b.setAttribute("aria-selected", c.code === state.code);
+      const s = document.createElement("span"); s.className="c"; s.textContent = c.code;
+      const n = document.createElement("span"); n.textContent = c.name;
+      const r = document.createElement("span"); r.className="r"; r.textContent = rateTxt(c.code, market(c.code)).replace(" = "," ");
+      b.append(s, n, r);
+      b.onclick = () => {
+        state.code = c.code; store.set("tw.code", c.code);
+        $("amount").value = fmt(c.quick[1]); state.reverse = false;
+        if (c.code !== state.fxCode){ $("got").value = ""; state.fxCode = c.code; }
+        closeMenu(true); renderAll();
+      };
+      box.append(b);
+    });
+  }
+  function openMenu(){
+    $("menu").hidden = false; $("pickBtn").setAttribute("aria-expanded","true");
+    const sel = $("menu").querySelector('[aria-selected="true"]');
+    if (sel){ sel.scrollIntoView({block:"nearest"}); sel.focus({preventScroll:true}); }
+  }
+  function closeMenu(focusBtn){
+    $("menu").hidden = true; $("pickBtn").setAttribute("aria-expanded","false");
+    if (focusBtn) $("pickBtn").focus();
+  }
+  $("pickBtn").onclick = () => $("menu").hidden ? openMenu() : closeMenu();
+  document.addEventListener("click", e => { if (!$("picker").contains(e.target)) closeMenu(); });
+  $("menu").addEventListener("keydown", e => {
+    const opts = [...$("menu").querySelectorAll(".opt")], i = opts.indexOf(document.activeElement);
+    if (e.key === "Escape"){ e.preventDefault(); closeMenu(true); }
+    else if (e.key === "ArrowDown"){ e.preventDefault(); opts[Math.min(i+1, opts.length-1)].focus(); }
+    else if (e.key === "ArrowUp"){ e.preventDefault(); opts[Math.max(i-1, 0)].focus(); }
+  });
+
+  /* ── 지갑 요약 ── */
+  function renderWallets(){
+    const c = cur(), box = $("wallets"); box.textContent = "";
+    const tile = (k, v, s, neg) => {
+      const d = document.createElement("div"); d.className = "wallet" + (neg ? " neg" : "");
+      const a = document.createElement("div"); a.className="k"; a.textContent = k;
+      const b = document.createElement("div"); b.className="v"; b.textContent = v;
+      const e = document.createElement("div"); e.className="s"; e.textContent = s;
+      d.append(a,b,e); box.append(d);
+    };
+    ["cash","travel"].forEach(m => {
+      const w = wallet(c.code, m);
+      const label = m === "cash" ? "현금 잔액" : "트래블카드 잔액";
+      if (!w.n) tile(label, `0${c.unit}`, m === "cash" ? "환전 기록 없음" : "충전 기록 없음");
+      else tile(label, `${fmt(w.balance, c.dp)}${c.unit}`, `≈ ${fmt(Math.round(w.balance * w.rate))}원`, w.balance < 0);
+    });
+    const g = state.expenses.filter(e => e.code === c.code && e.method === "gln");
+    const gk = g.reduce((a,e)=>a+e.krw,0), est = g.filter(e=>!e.confirmed).length;
+    tile("GLN 사용", `${fmt(Math.round(gk))}원`, g.length ? `${g.length}건${est ? ` · 예상 ${est}건` : " · 모두 확정"}` : "사용 기록 없음");
+  }
+
+  /* ── 계산기 ── */
+  function renderPay(){
+    const c = cur();
+    document.querySelectorAll("#pay button").forEach(b => {
+      const m = b.dataset.m; b.setAttribute("aria-pressed", m === state.method);
+      const r = methodRate(c.code, m);
+      $("payRate-"+m).textContent = rateTxt(c.code, r.rate).split(" = ")[1];
+    });
+    const r = methodRate(c.code, state.method);
+    $("rateText").textContent = `${rateTxt(c.code, r.rate)}`;
+    $("rateTag").textContent = r.src;
+    $("rateTag").classList.toggle("custom", !!r.fallback);
+    $("glnBox").hidden = state.method !== "gln";
+    $("glnFee").value = fmt(state.glnFee, 2);
+    $("src").textContent = rateStatus;
+  }
+  function renderQuick(){
+    const c = cur(), q = $("quick"); q.textContent = "";
+    (state.reverse ? [10000,30000,50000,100000] : c.quick).forEach(v => {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = "+" + fmt(v);
+      b.onclick = () => { $("amount").value = fmt(parse($("amount").value) + v); renderResult(); };
+      q.append(b);
+    });
+    const clr = document.createElement("button"); clr.type="button"; clr.textContent="지우기";
+    clr.onclick = () => { $("amount").value=""; $("amount").focus(); renderResult(); };
+    q.append(clr);
+  }
+  function current(){
+    const c = cur(), v = parse($("amount").value), r = methodRate(c.code, state.method).rate;
+    return state.reverse ? {local: v / r, krw: v} : {local: v, krw: v * r};
+  }
+  function renderResult(){
+    const c = cur(), {local, krw} = current();
+    $("fromUnit").textContent = state.reverse ? "원" : c.unit;
+    $("swap").textContent = state.reverse ? `⇅ ${c.unit}로 입력` : "⇅ 원화로 입력";
+    const big = $("result"); big.textContent = "";
+    const m = document.createElement("mark");
+    const actual = state.method === "gln" ? parse($("glnActual").value) : 0;
+    if (state.reverse){
+      m.textContent = fmt(local, c.dp || (local < 10 ? 2 : 0));
+      big.append(m, document.createTextNode(" " + c.unit));
+      $("resultCap").textContent = `${fmt(krw)}원이면 · ${METHODS[state.method]}`;
+    } else {
+      m.textContent = fmt(Math.round(actual || krw));
+      big.append(actual ? "" : "≈ ", m, document.createTextNode("원"));
+      $("resultCap").textContent = `${fmt(local, c.dp)}${c.unit} · ${METHODS[state.method]}${state.method==="gln" ? (actual ? " 확정" : " 예상") : ""}`;
+    }
+  }
+  document.querySelectorAll("#pay button").forEach(b => b.onclick = () => {
+    state.method = b.dataset.m; store.set("tw.method", state.method);
+    renderPay(); renderResult();
+  });
+  $("amount").addEventListener("input", e => {
+    const raw = e.target.value.replace(/[^\d.]/g,""), [i, d] = raw.split(".");
+    e.target.value = (i ? Number(i).toLocaleString("ko-KR") : "") + (d !== undefined ? "." + d.slice(0,2) : "");
+    renderResult();
+  });
+  $("swap").onclick = () => {
+    const {local, krw} = current(), c = cur();
+    state.reverse = !state.reverse;
+    $("amount").value = state.reverse ? fmt(Math.round(krw)) : fmt(local, c.dp);
+    renderQuick(); renderResult();
+  };
+  $("glnFee").addEventListener("change", e => {
+    const v = parseFloat(e.target.value.replace(/[^\d.]/g,""));
+    state.glnFee = isFinite(v) ? Math.min(v, 10) : 0; store.set("tw.glnFee", state.glnFee);
+    renderPay(); renderResult();
+  });
+  $("glnActual").addEventListener("input", e => {
+    const n = e.target.value.replace(/[^\d]/g,""); e.target.value = n ? Number(n).toLocaleString("ko-KR") : ""; renderResult();
+  });
+  $("logForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const {local, krw} = current();
+    if (!(local > 0)) { $("amount").focus(); return; }
+    const actual = state.method === "gln" ? parse($("glnActual").value) : 0;
+    state.expenses.push({id: Date.now()+Math.random(), code: state.code, method: state.method, amount: local,
+      krw: actual || krw, confirmed: state.method !== "gln" || !!actual, cat: state.cat, memo: $("memo").value.trim(), ts: Date.now()});
+    save(); $("memo").value = ""; $("glnActual").value = "";
+    renderWallets(); renderList(); renderResult(); renderTrip();
+  });
+
+  /* ── 환전 · 충전 ── */
+  function fxCalc(){
+    const c = cur(), paid = parse($("paid").value), got = parse($("got").value);
+    if (!(paid > 0) || !(got > 0)) return null;
+    const payCur = state.kind === "travel" ? "KRW" : state.payCur;
+    const paidKrw = payCur === "USD" ? paid * market("USD") : paid;
+    const expected = paidKrw / market(c.code), diff = got - expected;
+    return {c, paid, got, payCur, paidKrw, expected, diff, diffKrw: diff * market(c.code), pct: diff/expected*100, eff: paidKrw/got};
+  }
+  function renderFxInputs(){
+    const c = cur(), travel = state.kind === "travel";
+    $("kindCash").setAttribute("aria-pressed", !travel);
+    $("kindTravel").setAttribute("aria-pressed", travel);
+    $("fxSub").textContent = travel ? "원화로 충전하고 받은 금액을 넣으면 충전 환율을 시장과 비교해요." : "낸 돈과 받은 돈을 넣으면 시장 환율보다 얼마나 잘 받았는지 알려줘요.";
+    $("fxSave").textContent = travel ? "충전 기록 저장" : "환전 기록 저장";
+    $("gotLabel").textContent = travel ? "충전된 돈" : "받은 돈";
+    const usdOk = !travel && c.code !== "USD";
+    $("paySeg").hidden = !usdOk;
+    const payCur = usdOk ? state.payCur : "KRW";
+    $("payKRW").setAttribute("aria-pressed", payCur === "KRW");
+    $("payUSD").setAttribute("aria-pressed", payCur === "USD");
+    $("paidUnit").textContent = payCur === "USD" ? "달러" : "원";
+    $("gotUnit").textContent = c.unit;
+    const q = $("paidQuick"); q.textContent = "";
+    const opts = payCur === "USD" ? [["100달러 +1장",100],["50달러 +1장",50],["20달러 +1장",20]]
+      : travel ? [["+10만원",100000],["+30만원",300000],["+50만원",500000]]
+      : [["5만원권 +1장",50000],["5만원권 +10장",500000],["1만원권 +1장",10000]];
+    opts.forEach(([t,v]) => {
+      const b = document.createElement("button"); b.type="button"; b.textContent=t;
+      b.onclick = () => { $("paid").value = fmt(parse($("paid").value) + v, 2); renderFx(); };
+      q.append(b);
+    });
+    const clr = document.createElement("button"); clr.type="button"; clr.textContent="지우기";
+    clr.onclick = () => { $("paid").value=""; $("paid").focus(); renderFx(); };
+    q.append(clr);
+  }
+  function renderFx(){
+    const v = $("verdict"); v.textContent = ""; v.className = "verdict";
+    const c = cur(), got = parse($("got").value), gk = $("gotKrw"); gk.textContent = "";
+    if (got > 0){
+      const b = document.createElement("span"); b.className = "gotkrw-strong";
+      b.textContent = `≈ ${fmt(Math.round(got * market(c.code)))}원`;
+      gk.append(b, ` · 받은 ${c.unit}을 시장 환율로 원화 환산한 값`);
+    }
+    const r = fxCalc();
+    $("fxSave").disabled = !r;
+    if (!r){ const p=document.createElement("div"); p.className="hint"; p.textContent="낸 돈과 받은 돈을 모두 넣어 주세요."; v.append(p); return; }
+    const good = r.diff >= 0; v.classList.add(good ? "good" : "bad");
+    const head = document.createElement("div"); head.className = "head";
+    head.textContent = Math.abs(r.pct) < 0.05 ? "시장 환율과 거의 같게 받았어요"
+      : `시장 환율보다 ${fmt(Math.abs(r.pct),1)}% ${good ? "더" : "덜"} 받았어요`;
+    const dl = document.createElement("dl"); dl.className = "cmp";
+    const rows = [];
+    if (r.payCur === "USD"){
+      rows.push(["낸 돈 원화 환산", `${fmt(r.paid,2)}달러 ≈ ${fmt(Math.round(r.paidKrw))}원`]);
+      rows.push(["받은 환율", `1달러 = ${fmt(r.got / r.paid, c.dp)}${c.unit}`]);
+      rows.push(["시장 환율", `1달러 = ${fmt(market("USD")/market(c.code), c.dp)}${c.unit}`]);
+    } else {
+      rows.push(["받은 환율", rateTxt(c.code, r.eff)]);
+      rows.push(["시장 환율", rateTxt(c.code, market(c.code))]);
+    }
+    rows.push(["시장 환율이면", `${fmt(r.expected, c.dp)}${c.unit}`]);
+    rows.push(["실제 받은 돈", `${fmt(r.got, c.dp)}${c.unit}`]);
+    rows.push(["받은 돈 원화 가치", `≈ ${fmt(Math.round(r.got * market(c.code)))}원`]);
+    rows.push(["차이", `${sign(r.diff)}${fmt(Math.abs(r.diff), c.dp)}${c.unit} (${sign(r.diff)}${fmt(Math.abs(Math.round(r.diffKrw)))}원)`, "diff"]);
+    rows.forEach(([k,val,cls]) => {
+      const dt=document.createElement("dt"); dt.textContent=k;
+      const dd=document.createElement("dd"); dd.textContent=val; if (cls) dd.className=cls;
+      dl.append(dt, dd);
+    });
+    v.append(head, dl);
+  }
+  function renderFxList(){
+    const c0 = cur(), ul = $("fxList"); ul.textContent = "";
+    const sum = $("fxSum"); sum.textContent = "";
+    const w = wallet(c0.code, state.kind);
+    sum.hidden = !w.n;
+    if (w.n){
+      const k = document.createElement("div"); k.className="k";
+      k.textContent = `${state.kind === "travel" ? "총 충전한" : "총 환전한"} ${c0.unit} (${w.n}회)`;
+      const v = document.createElement("div"); v.className="v";
+      const bb = document.createElement("b"); bb.textContent = `${fmt(w.got, c0.dp)}${c0.unit}`;
+      const sm = document.createElement("small");
+      sm.textContent = `≈ ${fmt(Math.round(w.got*market(c0.code)))}원 · 실제 들인 돈 ${fmt(Math.round(w.paidKrw))}원 · 평균 ${rateTxt(c0.code, w.rate)}`;
+      v.append(bb, sm); sum.append(k, v);
+    }
+    state.fx.filter(x => x.kind === state.kind).sort((a,b)=>b.ts-a.ts).forEach(x => {
+      const c = byCode(x.code), li = document.createElement("li"), left = document.createElement("div");
+      const t = document.createElement("div"); t.style.fontWeight="500";
+      t.textContent = `${fmt(x.paid,2)}${x.payCur==="USD"?"달러":"원"} → ${fmt(x.got, c.dp)}${c.unit}`;
+      const tk = document.createElement("div"); tk.className="meta"; tk.textContent = `받은 돈 ≈ ${fmt(Math.round(x.got * market(x.code)))}원`;
+      const m = document.createElement("div"); m.className="meta";
+      m.textContent = `${c.name} · ${when(x.ts)} · 시장 대비 ${sign(x.pct)}${fmt(Math.abs(x.pct),1)}%`;
+      left.append(t, tk, m);
+      const dd = document.createElement("div"); dd.className = "d " + (x.diff >= 0 ? "good" : "bad");
+      dd.textContent = `${sign(x.diff)}${fmt(Math.abs(Math.round(x.diffKrw)))}원`;
+      const del = document.createElement("button"); del.className="del"; del.type="button"; del.textContent="×";
+      del.setAttribute("aria-label","기록 삭제");
+      del.onclick = () => { state.fx = state.fx.filter(y => y.id !== x.id); save(); renderFxList(); renderWallets(); renderPay(); renderResult(); renderTrip(); };
+      li.append(left, dd, del); ul.append(li);
+    });
+  }
+  function moneyInput(el){
+    el.addEventListener("input", () => {
+      const raw = el.value.replace(/[^\d.]/g,""), [i,d] = raw.split(".");
+      el.value = (i ? Number(i).toLocaleString("ko-KR") : "") + (d !== undefined ? "." + d.slice(0,2) : "");
+      renderFx();
+    });
+  }
+  moneyInput($("paid")); moneyInput($("got"));
+  $("kindCash").onclick = () => { state.kind = "cash"; renderFxInputs(); renderFx(); renderFxList(); };
+  $("kindTravel").onclick = () => { state.kind = "travel"; state.payCur = "KRW"; renderFxInputs(); renderFx(); renderFxList(); };
+  $("payKRW").onclick = () => { if (state.payCur!=="KRW"){ state.payCur="KRW"; $("paid").value="500,000"; renderFxInputs(); renderFx(); } };
+  $("payUSD").onclick = () => { if (state.payCur!=="USD"){ state.payCur="USD"; $("paid").value="100"; renderFxInputs(); renderFx(); } };
+  $("fxSave").onclick = () => {
+    const r = fxCalc(); if (!r) return;
+    state.fx.push({id:Date.now()+Math.random(), ts:Date.now(), code:r.c.code, kind:state.kind, payCur:r.payCur, paid:r.paid, got:r.got,
+      paidKrw:r.paidKrw, diff:r.diff, diffKrw:r.diffKrw, pct:r.pct, effKrwPer:r.eff});
+    save(); renderFxList(); renderWallets(); renderPay(); renderResult(); renderTrip();
+  };
+
+  /* ── 지출 기록 ── */
+  function renderList(){
+    const list = $("list"); list.textContent = "";
+    const items = state.expenses.slice().sort((a,b) => b.ts - a.ts);
+    if (!items.length){
+      const li = document.createElement("li"); li.className = "empty"; li.style.display="block";
+      li.textContent = "아직 기록이 없어요. 결제수단을 고르고 금액을 넣은 뒤 ‘지출 기록’을 누르면 여기에 쌓여요.";
+      list.append(li);
+    }
+    items.forEach(e => {
+      const c = byCode(e.code), li = document.createElement("li"), left = document.createElement("div");
+      const memo = document.createElement("div"); memo.className="memo";
+      const bd = document.createElement("span"); bd.className = "badge " + e.method; bd.textContent = METHODS[e.method];
+      const ct = document.createElement("span"); ct.className = "cat-tag"; ct.textContent = CATS[e.cat] || "기타";
+      memo.append(bd, e.memo || CATS[e.cat] || "지출", ct);
+      const meta = document.createElement("div"); meta.className="meta"; meta.textContent = `${c.name} · ${when(e.ts)}`;
+      left.append(memo, meta);
+      const amt = document.createElement("div"); amt.className="amt";
+      const k = document.createElement("div"); k.className="krw"; k.textContent = (e.confirmed ? "" : "≈ ") + fmt(Math.round(e.krw)) + "원";
+      const l = document.createElement("div"); l.className="loc"; l.textContent = fmt(e.amount, c.dp) + c.unit;
+      amt.append(k, l);
+      if (!e.confirmed){
+        const b = document.createElement("button"); b.type="button"; b.className="est"; b.textContent = "예상 · 실제 금액 입력";
+        b.onclick = () => { state.editing = e.id; renderList(); const i = $("confirmInput"); if (i) i.focus(); };
+        amt.append(b);
+      }
+      const del = document.createElement("button"); del.className="del"; del.type="button";
+      del.setAttribute("aria-label", `${e.memo || "지출"} 삭제`); del.textContent = "×";
+      del.onclick = () => { state.expenses = state.expenses.filter(x => x.id !== e.id); save(); renderList(); renderWallets(); renderTrip(); };
+      li.append(left, amt, del);
+      if (state.editing === e.id){
+        const row = document.createElement("form"); row.className = "confirm-row";
+        const lab = document.createElement("label"); lab.htmlFor = "confirmInput"; lab.textContent = "실제 출금액";
+        const inp = document.createElement("input"); inp.id = "confirmInput"; inp.inputMode = "numeric"; inp.value = fmt(Math.round(e.krw));
+        inp.addEventListener("input", () => { const n = inp.value.replace(/[^\d]/g,""); inp.value = n ? Number(n).toLocaleString("ko-KR") : ""; });
+        const won = document.createElement("span"); won.textContent = "원";
+        const ok = document.createElement("button"); ok.type = "submit"; ok.textContent = "확정";
+        row.append(lab, inp, won, ok);
+        row.addEventListener("submit", ev => {
+          ev.preventDefault(); const v = parse(inp.value); if (!(v > 0)) { inp.focus(); return; }
+          e.krw = v; e.confirmed = true; state.editing = null; save(); renderList(); renderWallets(); renderTrip();
+        });
+        li.append(row);
+      }
+      list.append(li);
+    });
+    const total = state.expenses.reduce((s,e) => s + e.krw, 0);
+    $("total").textContent = fmt(Math.round(total)) + "원";
+    const parts = Object.keys(METHODS).map(m => [m, state.expenses.filter(e=>e.method===m).reduce((a,e)=>a+e.krw,0)])
+      .filter(([,v]) => v > 0).map(([m,v]) => `${METHODS[m]} ${fmt(Math.round(v))}원`);
+    $("spendCount").textContent = state.expenses.length ? `${state.expenses.length}건 · ${parts.join(" · ")}` : "";
+  }
+
+  /* ── 카테고리 ── */
+  function renderCats(){
+    const box = $("cats"); box.textContent = "";
+    Object.entries(CATS).forEach(([k,v]) => {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = v;
+      b.setAttribute("aria-pressed", k === state.cat);
+      b.onclick = () => { state.cat = k; store.set("tw.cat", k); renderCats(); };
+      box.append(b);
+    });
+  }
+
+  /* ── 여행 한눈에 + 결산 ── */
+  const inTrip = e => { const d = dstr(new Date(e.ts)); return d >= state.trip.start && d <= state.trip.end; };
+  function tripDays(){
+    const out = []; let d = state.trip.start;
+    while (d <= state.trip.end && out.length < 60){ out.push(d); d = addDays(d, 1); }
+    return out;
+  }
+  function bars(el, rows){
+    el.textContent = "";
+    const max = Math.max(...rows.map(r => r[1]), 1), total = rows.reduce((a,r)=>a+r[1],0);
+    if (!total){ const p = document.createElement("div"); p.className = "hint"; p.textContent = "아직 기록이 없어요."; el.append(p); return; }
+    rows.filter(r => r[1] > 0).sort((a,b)=>b[1]-a[1]).forEach(([label, v]) => {
+      const row = document.createElement("div"); row.className = "bar";
+      const l = document.createElement("span"); l.textContent = label;
+      const t = document.createElement("span"); t.className = "t"; t.title = `${label} ${fmt(Math.round(v))}원 (${fmt(v/total*100,0)}%)`; const i = document.createElement("i"); i.style.width = (v/max*100) + "%"; t.append(i);
+      const n = document.createElement("span"); n.className = "n"; n.textContent = fmt(Math.round(v)) + "원";
+      const sm = document.createElement("small"); sm.textContent = fmt(v/total*100,0) + "%"; n.append(sm);
+      row.append(l, t, n); el.append(row);
+    });
+  }
+  function renderTrip(){
+    $("tripStart").value = state.trip.start; $("tripEnd").value = state.trip.end;
+    const days = tripDays(), today = dstr(new Date());
+    const list = state.expenses.filter(inTrip), total = list.reduce((a,e)=>a+e.krw,0);
+    const idx = days.indexOf(today);
+    let label, elapsed;
+    if (today < state.trip.start){ const n = Math.round((new Date(state.trip.start) - new Date(today))/864e5); label = `D-${n}`; elapsed = 0; }
+    else if (today > state.trip.end){ label = "여행 끝"; elapsed = days.length; }
+    else { label = `${idx+1}일차 / ${days.length}일`; elapsed = idx + 1; }
+    $("tripDay").textContent = label;
+    $("tripTotal").textContent = fmt(Math.round(total)) + "원";
+    $("tripAvg").textContent = fmt(Math.round(total / Math.max(elapsed || days.length, 1))) + "원";
+    $("tripBar").style.width = (elapsed / days.length * 100) + "%";
+    const est = list.filter(e => !e.confirmed).length, out = state.expenses.length - list.length;
+    const notes = [`${list.length}건`];
+    if (est) notes.push(`GLN 예상 금액 ${est}건 포함`);
+    if (out) notes.push(`여행 기간 밖 기록 ${out}건은 빠져 있어요`);
+    $("tripNote").textContent = notes.join(" · ");
+
+    // 날짜별 막대
+    const box = $("rDays"); box.textContent = "";
+    const per = days.map(d => list.filter(e => dstr(new Date(e.ts)) === d).reduce((a,e)=>a+e.krw,0));
+    const max = Math.max(...per, 1);
+    days.forEach((d, k) => {
+      const col = document.createElement("div"); col.className = "dcol" + (per[k] ? "" : " zero") + (d === today ? " today" : "");
+      col.title = `${d} · ${fmt(Math.round(per[k]))}원`;
+      const v = document.createElement("span"); v.className = "v"; v.textContent = per[k] ? (per[k] >= 10000 ? fmt(per[k]/10000,1) + "만" : fmt(Math.round(per[k]))) : "";
+      const i = document.createElement("i"); i.style.height = (per[k] / max * 80) + "px";
+      const l = document.createElement("span"); l.className = "l"; l.textContent = `${+d.slice(5,7)}/${+d.slice(8)}`;
+      col.append(v, i, l); box.append(col);
+    });
+    bars($("rCats"), Object.entries(CATS).map(([k,v]) => [v, list.filter(e => (e.cat||"etc") === k).reduce((a,e)=>a+e.krw,0)]));
+    bars($("rMethods"), Object.entries(METHODS).map(([k,v]) => [v, list.filter(e => e.method === k).reduce((a,e)=>a+e.krw,0)]));
+
+    // 환전·충전 요약
+    const dl = $("rFx"); dl.textContent = "";
+    const add = (k, v, cls) => { const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; if (cls) dd.className = cls; dl.append(dt, dd); };
+    const fxs = state.fx;
+    const paid = fxs.reduce((a,x)=>a+x.paidKrw,0), loss = fxs.reduce((a,x)=>a+x.diffKrw,0);
+    add("환전·충전에 쓴 원화", `${fmt(Math.round(paid))}원 (${fxs.length}회)`);
+    add("시장 환율 대비", `${sign(loss)}${fmt(Math.abs(Math.round(loss)))}원`, loss < 0 ? "bad" : "good");
+    const codes = [...new Set(state.fx.map(x => x.code))];
+    codes.forEach(code => ["cash","travel"].forEach(m => {
+      const w = wallet(code, m); if (!w.n) return;
+      const c = byCode(code);
+      add(`남은 ${m === "cash" ? "현금" : "트래블카드"}${codes.length > 1 ? ` (${c.code})` : ""}`, `${fmt(w.balance, c.dp)}${c.unit} ≈ ${fmt(Math.round(w.balance * w.rate))}원`, w.balance < 0 ? "bad" : "");
+    }));
+  }
+  function setTrip(){
+    let s0 = $("tripStart").value || state.trip.start, e0 = $("tripEnd").value || state.trip.end;
+    if (e0 < s0) e0 = s0;
+    state.trip = {start: s0, end: e0}; store.set("tw.trip", state.trip); renderTrip();
+  }
+  $("tripStart").addEventListener("change", setTrip);
+  $("tripEnd").addEventListener("change", setTrip);
+
+  /* ── 백업 ── */
+  const status = (msg, err) => { $("bkStatus").textContent = msg; $("bkStatus").classList.toggle("err", !!err); };
+  const backupData = () => ({app:"여행 환율수첩", version:1, savedAt: new Date().toISOString(),
+    trip: state.trip, code: state.code, glnFee: state.glnFee, expenses: state.expenses, fx: state.fx});
+  async function offer(filename, data){
+    const type = filename.endsWith(".csv") ? "text/csv" : "application/json";
+    try {
+      const file = new File([data], filename, {type});
+      if (navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title: filename});
+        status("공유 시트에서 ‘파일에 저장’을 고르면 아이폰 파일 앱에 보관돼요."); return;
+      }
+    } catch(err){ if (err && err.name === "AbortError"){ status("저장을 취소했어요."); return; } }
+    try {
+      const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([data], {type})); a.download = filename;
+      document.body.append(a); a.click(); a.remove();
+      status(`${filename} 저장을 시작했어요.`);
+    } catch(e){ status("이 기기에서는 파일 저장이 안 돼요.", true); }
+  }
+  $("bkJson").onclick = () => offer(`여행환율수첩_백업_${dstr(new Date())}.json`, JSON.stringify(backupData(), null, 1));
+  $("bkCsv").onclick = () => {
+    const q = v => `"${String(v).replace(/"/g,'""')}"`;
+    const rows = [["날짜","시간","나라","카테고리","결제수단","내용","현지 금액","통화","원화","확정 여부"]];
+    state.expenses.slice().sort((a,b)=>a.ts-b.ts).forEach(e => {
+      const d = new Date(e.ts), c = byCode(e.code);
+      rows.push([dstr(d), `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`, c.name, CATS[e.cat]||"기타", METHODS[e.method], e.memo||"", Math.round(e.amount*100)/100, e.code, Math.round(e.krw), e.confirmed ? "확정" : "예상"]);
+    });
+    rows.push([]); rows.push(["환전·충전 기록"]); rows.push(["날짜","종류","나라","낸 돈","낸 통화","받은 돈","통화","낸 돈 원화","시장 대비 원화"]);
+    state.fx.slice().sort((a,b)=>a.ts-b.ts).forEach(x => rows.push([dstr(new Date(x.ts)), x.kind==="travel"?"트래블카드 충전":"현금 환전", byCode(x.code).name, x.paid, x.payCur, x.got, x.code, Math.round(x.paidKrw), Math.round(x.diffKrw)]));
+    offer(`여행환율수첩_${dstr(new Date())}.csv`, "﻿" + rows.map(r => r.map(q).join(",")).join("\r\n"));
+  };
+  $("bkFile").addEventListener("change", e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const d = JSON.parse(rd.result);
+        if (!Array.isArray(d.expenses) || !Array.isArray(d.fx)) throw 0;
+        state.pendingImport = d; renderImport();
+      } catch(err){ status("여행 환율수첩 백업 파일이 아니에요. ‘백업 파일 저장’으로 만든 .json 파일을 골라 주세요.", true); }
+      e.target.value = "";
+    };
+    rd.readAsText(f);
+  });
+  function renderImport(){
+    const box = $("importBox"); box.textContent = "";
+    const d = state.pendingImport; if (!d) return;
+    const w = document.createElement("div"); w.className = "import-confirm";
+    const t = document.createElement("div");
+    t.textContent = `지출 ${d.expenses.length}건, 환전·충전 ${d.fx.length}건이 든 백업이에요. 불러오면 지금 기록(지출 ${state.expenses.length}건, 환전·충전 ${state.fx.length}건)을 대체해요.`;
+    const btns = document.createElement("div"); btns.className = "btns";
+    const ok = document.createElement("button"); ok.type = "button"; ok.textContent = "불러오기";
+    const no = document.createElement("button"); no.type = "button"; no.className = "no"; no.textContent = "취소";
+    ok.onclick = () => {
+      state.expenses = d.expenses.map(e => ({method:"cash", confirmed:true, cat:"etc", ...e}));
+      state.fx = d.fx.map(x => ({kind:"cash", ...x}));
+      if (d.trip && d.trip.start) { state.trip = d.trip; store.set("tw.trip", d.trip); }
+      if (typeof d.glnFee === "number") { state.glnFee = d.glnFee; store.set("tw.glnFee", d.glnFee); }
+      save(); state.pendingImport = null; renderImport(); renderAll(); status("백업을 불러왔어요.");
+    };
+    no.onclick = () => { state.pendingImport = null; renderImport(); status(""); };
+    btns.append(ok, no); w.append(t, btns); box.append(w);
+  }
+
+  /* ── 탭 · 디자인 ── */
+  let tab = store.get("tw.tab","home");
+  function showTab(t){
+    tab = t; store.set("tw.tab", t);
+    document.querySelectorAll("[data-tab]").forEach(el => el.hidden = el.dataset.tab !== t);
+    document.querySelectorAll(".tabbar button").forEach(b => b.setAttribute("aria-selected", b.dataset.go === t));
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => showTab(b.dataset.go));
+
+  function renderAll(){ renderCats(); renderTrip(); renderCountries(); renderWallets(); renderPay(); renderQuick(); renderResult(); renderFxInputs(); renderFx(); renderFxList(); renderList(); }
+
+  $("foot").textContent = `시장 환율 출처: ExchangeRate-API (open.er-api.com), 하루 한 번 갱신되는 기준 환율이에요. 현금·트래블카드 지출은 내가 환전·충전한 평균 환율로, GLN은 시장 환율에 수수료를 더해 계산해요. 카드 단말기에서 원화(KRW) 결제를 묻는다면 현지 통화로 결제하는 게 보통 유리해요. 기록은 이 기기의 브라우저에만 저장됩니다.`;
+  renderAll();
+  showTab(tab);
+  refreshRates();
+  window.addEventListener("online", () => refreshRates(true));
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshRates(); });
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+</script>
+</body>
+</html>
