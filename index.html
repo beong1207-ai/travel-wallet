@@ -265,6 +265,8 @@ h1{font-size:24px}
 .stay .money{background:var(--paper)}
 .stay .seg{align-self:flex-start;background:var(--paper)}
 .stay .seg button[aria-pressed="true"]{background:var(--jade);color:#fff}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px}
+.chk input{width:18px;height:18px;accent-color:var(--jade)}
 .stay-sum{font-size:13px;font-weight:500}
 .ticket.prepaid .t-top{opacity:.35;pointer-events:none}
 .badge.prepaid{background:var(--hero);color:#fff}
@@ -294,7 +296,7 @@ h1{font-size:24px}
     </div>
     <div class="row">
       <div><div class="k-row"><span class="k">여행 총 지출</span> <span class="day" id="tripDay"></span></div><div class="big" id="tripTotal">0원</div></div>
-      <div class="avg"><div class="k">하루 평균</div><div id="tripAvg">0원</div></div>
+      <div class="avg"><div class="k" id="tripAvgLabel">하루 평균</div><div id="tripAvg">0원</div></div>
     </div>
     <div class="progress" aria-hidden="true"><i id="tripBar" style="width:0"></i></div>
     <div class="note" id="tripNote"></div>
@@ -346,6 +348,15 @@ h1{font-size:24px}
         </div>
         <div class="money" id="stayKrwWrap"><input id="stayKrw" inputmode="numeric" autocomplete="off" placeholder="결제한 금액" aria-label="결제한 원화 금액"><span>원</span></div>
         <div class="stay-sum" id="staySum"></div>
+      </div>
+      <div class="stay" id="flightBox" hidden>
+        <div class="stay-dates">
+          <label>가는 날<input type="date" id="flyOut"></label>
+          <label id="flyBackLabel">오는 날<input type="date" id="flyBack"></label>
+        </div>
+        <label class="chk"><input type="checkbox" id="flyOneWay"> 편도</label>
+        <div class="money"><input id="flyKrw" inputmode="numeric" autocomplete="off" placeholder="결제한 금액 (왕복이면 합계)" aria-label="항공권 원화 금액"><span>원</span></div>
+        <div class="stay-sum" id="flySum"></div>
       </div>
       <div class="when-row" id="whenRow"><label for="spendDate">쓴 날짜</label><input type="date" id="spendDate"><span class="note" id="whenNote">오늘</span></div>
       <form class="log-row" id="logForm">
@@ -403,7 +414,7 @@ h1{font-size:24px}
 
   <section class="report" aria-label="여행 결산" data-tab="report">
     <h2>여행 결산</h2>
-    <div><h3>날짜별</h3><div class="days" id="rDays"></div></div>
+    <div><h3>날짜별</h3><div class="days" id="rDays"></div><div class="hint" id="rDaysNote" style="margin-top:6px"></div></div>
     <div><h3>카테고리별</h3><div class="bars" id="rCats"></div></div>
     <div><h3>결제수단별</h3><div class="bars" id="rMethods"></div></div>
     <div><h3>환전 · 충전</h3><dl class="kv" id="rFx"></dl></div>
@@ -455,7 +466,7 @@ h1{font-size:24px}
     ["영국","GBP","파운드",2,1,[5,10,20,50]],
   ].map(([name,code,unit,dp,per,quick]) => ({name,code,unit,dp,per,quick}));
   const METHODS = {cash:"현금", travel:"트래블카드", gln:"GLN", prepaid:"사전결제"};
-  const CATS = {food:"식비", cafe:"카페·간식", transport:"교통", shopping:"쇼핑", massage:"마사지", tour:"투어·관광", stay:"숙소", etc:"기타"};
+  const CATS = {food:"식비", cafe:"카페·간식", transport:"교통", shopping:"쇼핑", massage:"마사지", tour:"투어·관광", stay:"숙소", flight:"항공", etc:"기타"};
   const dstr = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
   const addDays = (s, n) => { const d = new Date(s+"T00:00:00"); d.setDate(d.getDate()+n); return dstr(d); };
 
@@ -627,10 +638,10 @@ h1{font-size:24px}
     clr.onclick = () => { $("amount").value=""; $("amount").focus(); renderResult(); };
     q.append(clr);
   }
-  const stayPrepaid = () => state.cat === "stay" && state.stayPay === "prepaid";
+  const stayPrepaid = () => (state.cat === "stay" && state.stayPay === "prepaid") || state.cat === "flight";
   function current(){
     const c = cur();
-    if (stayPrepaid()){ const k = parse($("stayKrw").value); return {local: k / market(c.code), krw: k}; }
+    if (stayPrepaid()){ const k = parse($(state.cat === "flight" ? "flyKrw" : "stayKrw").value); return {local: k / market(c.code), krw: k}; }
     const v = parse($("amount").value), r = methodRate(c.code, state.method).rate;
     return state.reverse ? {local: v / r, krw: v} : {local: v, krw: v * r};
   }
@@ -644,7 +655,7 @@ h1{font-size:24px}
     renderStay();
     if (stayPrepaid()){
       m.textContent = fmt(Math.round(krw)); big.append(m, document.createTextNode("원"));
-      $("resultCap").textContent = "숙소 · 미리 원화 결제"; return;
+      $("resultCap").textContent = state.cat === "flight" ? "항공권 · 미리 원화 결제" : "숙소 · 미리 원화 결제"; return;
     }
     if (state.reverse){
       m.textContent = fmt(local, c.dp || (local < 10 ? 2 : 0));
@@ -682,7 +693,7 @@ h1{font-size:24px}
   $("logForm").addEventListener("submit", e => {
     e.preventDefault();
     const {local, krw} = current(), pre = stayPrepaid();
-    if (!(local > 0)) { (pre ? $("stayKrw") : $("amount")).focus(); return; }
+    if (!(local > 0)) { (pre ? $(state.cat === "flight" ? "flyKrw" : "stayKrw") : $("amount")).focus(); return; }
     const method = pre ? "prepaid" : state.method;
     const actual = method === "gln" ? parse($("glnActual").value) : 0;
     const rec = {id: Date.now()+Math.random(), code: state.code, method, amount: local,
@@ -691,9 +702,12 @@ h1{font-size:24px}
       const a = $("stayIn").value, b = $("stayOut").value;
       if (!a){ $("stayIn").focus(); return; }
       rec.date = a; rec.nights = Math.max(1, b ? nightsBetween(a, b) : 1);
+    } else if (state.cat === "flight"){
+      const a = $("flyOut").value; if (!a){ $("flyOut").focus(); return; }
+      rec.date = a; if (!$("flyOneWay").checked && $("flyBack").value) rec.back = $("flyBack").value;
     } else if ($("spendDate").value && $("spendDate").value !== dstr(new Date())) rec.date = $("spendDate").value;
     state.expenses.push(rec);
-    save(); $("memo").value = ""; $("glnActual").value = ""; $("stayKrw").value = ""; $("spendDate").value = dstr(new Date()); renderWhen();
+    save(); $("memo").value = ""; $("glnActual").value = ""; $("stayKrw").value = ""; $("flyKrw").value = ""; $("spendDate").value = dstr(new Date()); renderWhen();
     renderWallets(); renderList(); renderResult(); renderTrip();
   });
 
@@ -706,7 +720,14 @@ h1{font-size:24px}
   function renderStay(){
     const on = state.cat === "stay";
     document.querySelector(".ticket").classList.toggle("prepaid", stayPrepaid());
-    $("stayBox").hidden = !on; $("whenRow").hidden = on;
+    const fly = state.cat === "flight";
+    $("stayBox").hidden = !on; $("flightBox").hidden = !fly; $("whenRow").hidden = on || fly;
+    if (fly){
+      if (!$("flyOut").value) $("flyOut").value = state.trip.start;
+      if (!$("flyBack").value || $("flyBack").value < $("flyOut").value) $("flyBack").value = state.trip.end >= $("flyOut").value ? state.trip.end : $("flyOut").value;
+      const one = $("flyOneWay").checked; $("flyBackLabel").hidden = one;
+      $("flySum").textContent = `${md($("flyOut").value)} 출발` + (one ? " · 편도" : ` · ${md($("flyBack").value)} 귀국 · 왕복`);
+    }
     if (!on) return;
     stayDefaults();
     document.querySelectorAll("#stayBox .seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.sp === state.stayPay));
@@ -714,6 +735,8 @@ h1{font-size:24px}
     const n = Math.max(1, nightsBetween($("stayIn").value, $("stayOut").value)), {krw} = current();
     $("staySum").textContent = `${md($("stayIn").value)} 체크인 · ${n}박` + (krw > 0 ? ` · 1박 약 ${fmt(Math.round(krw/n))}원` : "");
   }
+  ["flyOut","flyBack","flyOneWay"].forEach(id => $(id).addEventListener("change", renderResult));
+  $("flyKrw").addEventListener("input", e => { const n = e.target.value.replace(/[^\d]/g,""); e.target.value = n ? Number(n).toLocaleString("ko-KR") : ""; renderResult(); });
   function renderWhen(){
     const v = $("spendDate").value || dstr(new Date()), today = dstr(new Date());
     if (!$("spendDate").value) $("spendDate").value = today;
@@ -863,11 +886,11 @@ h1{font-size:24px}
       const bd = document.createElement("span"); bd.className = "badge " + e.method; bd.textContent = METHODS[e.method];
       const ct = document.createElement("span"); ct.className = "cat-tag"; ct.textContent = CATS[e.cat] || "기타";
       memo.append(bd, e.memo || CATS[e.cat] || "지출", ct);
-      const meta = document.createElement("div"); meta.className="meta"; meta.textContent = e.nights ? `${c.name} · ${md(e.date)} 체크인 · ${e.nights}박` : e.date ? `${c.name} · ${md(e.date)}` : `${c.name} · ${when(e.ts)}`;
+      const meta = document.createElement("div"); meta.className="meta"; meta.textContent = e.cat === "flight" ? `${md(e.date)} 출발` + (e.back ? ` · ${md(e.back)} 귀국` : " · 편도") : e.nights ? `${c.name} · ${md(e.date)} 체크인 · ${e.nights}박` : e.date ? `${c.name} · ${md(e.date)}` : `${c.name} · ${when(e.ts)}`;
       left.append(memo, meta);
       const amt = document.createElement("div"); amt.className="amt";
       const k = document.createElement("div"); k.className="krw"; k.textContent = (e.confirmed ? "" : "≈ ") + fmt(Math.round(e.krw)) + "원";
-      const l = document.createElement("div"); l.className="loc"; l.textContent = fmt(e.amount, c.dp) + c.unit;
+      const l = document.createElement("div"); l.className="loc"; l.textContent = e.method === "prepaid" ? "원화 결제" : fmt(e.amount, c.dp) + c.unit;
       amt.append(k, l);
       if (!e.confirmed){
         const b = document.createElement("button"); b.type="button"; b.className="est"; b.textContent = "예상 · 실제 금액 입력";
@@ -913,7 +936,7 @@ h1{font-size:24px}
   }
 
   /* ── 여행 한눈에 + 결산 ── */
-  const inTrip = e => { const d = expDate(e); return d >= state.trip.start && d <= state.trip.end; };
+  const inTrip = e => { const d = expDate(e); if (e.cat === "flight") return d <= state.trip.end && (e.back || d) >= addDays(state.trip.start, -1); return d >= state.trip.start && d <= state.trip.end; };
   function tripDays(){
     const out = []; let d = state.trip.start;
     while (d <= state.trip.end && out.length < 60){ out.push(d); d = addDays(d, 1); }
@@ -943,10 +966,16 @@ h1{font-size:24px}
     else { label = `${idx+1}일차 / ${days.length}일`; elapsed = idx + 1; }
     $("tripDay").textContent = label;
     $("tripTotal").textContent = fmt(Math.round(total)) + "원";
-    $("tripAvg").textContent = fmt(Math.round(total / Math.max(elapsed || days.length, 1))) + "원";
+    const flights = list.filter(e => e.cat === "flight").reduce((a,e)=>a+e.krw,0);
+    const stays = list.filter(e => e.cat === "stay").reduce((a,e)=>a+e.krw,0);
+    $("tripAvgLabel").textContent = flights ? "하루 평균 (항공 제외)" : "하루 평균";
+    $("tripAvg").textContent = fmt(Math.round((total - flights) / Math.max(elapsed || days.length, 1))) + "원";
     $("tripBar").style.width = (elapsed / days.length * 100) + "%";
     const est = list.filter(e => !e.confirmed).length, out = state.expenses.length - list.length;
     const notes = [`${list.length}건`];
+    if (flights) notes.push(`항공 ${fmt(Math.round(flights))}원`);
+    if (stays) notes.push(`숙소 ${fmt(Math.round(stays))}원`);
+    if (flights || stays) notes.push(`현지 지출 ${fmt(Math.round(total - flights - stays))}원`);
     if (est) notes.push(`GLN 예상 금액 ${est}건 포함`);
     if (out) notes.push(`여행 기간 밖 기록 ${out}건은 빠져 있어요`);
     $("tripNote").textContent = notes.join(" · ");
@@ -954,8 +983,9 @@ h1{font-size:24px}
     // 날짜별 막대
     const box = $("rDays"); box.textContent = "";
     const perMap = {};
-    list.forEach(e => { const n = e.nights || 1; for (let i = 0; i < n; i++){ const d = addDays(expDate(e), i); perMap[d] = (perMap[d]||0) + e.krw / n; } });
+    list.filter(e => e.cat !== "flight").forEach(e => { const n = e.nights || 1; for (let i = 0; i < n; i++){ const d = addDays(expDate(e), i); perMap[d] = (perMap[d]||0) + e.krw / n; } });
     const per = days.map(d => perMap[d] || 0);
+    $("rDaysNote").textContent = flights ? `항공권 ${fmt(Math.round(flights))}원은 날짜별에서 빠져 있어요. 숙소는 박마다 나눠서 넣었어요.` : (stays ? "숙소는 박마다 나눠서 넣었어요." : "");
     const max = Math.max(...per, 1);
     days.forEach((d, k) => {
       const col = document.createElement("div"); col.className = "dcol" + (per[k] ? "" : " zero") + (d === today ? " today" : "");
@@ -1015,7 +1045,7 @@ h1{font-size:24px}
     const rows = [["날짜","기록 시간","나라","카테고리","결제수단","내용","현지 금액","통화","원화","확정 여부","숙박"]];
     state.expenses.slice().sort((a,b)=>a.ts-b.ts).forEach(e => {
       const d = new Date(e.ts), c = byCode(e.code), ed = expDate(e);
-      rows.push([ed, `${dstr(d)} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`, c.name, CATS[e.cat]||"기타", METHODS[e.method], e.memo||"", Math.round(e.amount*100)/100, e.code, Math.round(e.krw), e.confirmed ? "확정" : "예상", e.nights ? `${e.nights}박` : ""]);
+      rows.push([ed, `${dstr(d)} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`, c.name, CATS[e.cat]||"기타", METHODS[e.method], e.memo||"", Math.round(e.amount*100)/100, e.code, Math.round(e.krw), e.confirmed ? "확정" : "예상", e.nights ? `${e.nights}박` : e.cat === "flight" ? (e.back ? `${e.date}~${e.back} 왕복` : `${e.date} 편도`) : ""]);
     });
     rows.push([]); rows.push(["환전·충전 기록"]); rows.push(["날짜","종류","나라","낸 돈","낸 통화","받은 돈","통화","낸 돈 원화","시장 대비 원화"]);
     state.fx.slice().sort((a,b)=>a.ts-b.ts).forEach(x => rows.push([dstr(new Date(x.ts)), x.kind==="travel"?"트래블카드 충전":"현금 환전", byCode(x.code).name, x.paid, x.payCur, x.got, x.code, Math.round(x.paidKrw), Math.round(x.diffKrw)]));
