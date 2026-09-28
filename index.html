@@ -307,7 +307,7 @@ header .src{flex:1 1 140px;min-width:0}
 .shops{list-style:none;margin:0;padding:0;background:var(--paper);border-radius:var(--r2);box-shadow:var(--shadow)}
 .shops li{display:grid;grid-template-columns:minmax(58px,auto) 1fr auto;gap:2px 12px;align-items:start;padding:12px 14px;border-top:1px solid var(--line)}
 .shops li:first-child{border-top:0}
-.shops li.done{opacity:.5}
+.shops li.done > :not(.buy){opacity:.5}
 .shops .no{font-family:var(--mono);font-weight:800;font-size:17px;color:var(--jade);line-height:1.3;white-space:nowrap}
 .shops .no .to{display:block;font-size:14px;font-weight:700;opacity:.8}
 .shops .no small{display:block;font-family:var(--sans);font-weight:400;font-size:11px;color:var(--muted)}
@@ -325,6 +325,22 @@ header .src{flex:1 1 140px;min-width:0}
 .shop-form .sf-row{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:8px}
 .shop-form .btns{display:flex;gap:8px;align-items:center}
 .tabbar button{font-size:11px}
+.shops .tap{cursor:pointer}
+.shops .spent{font-size:12px;font-weight:700;color:var(--hero);margin-top:4px}
+.buy{grid-column:1/-1;margin-top:10px;background:var(--ground);border-radius:var(--r3);padding:12px;display:flex;flex-direction:column;gap:8px}
+.buy .row{display:flex;gap:8px}
+.buy input{border:1px solid var(--line);border-radius:var(--r3);padding:8px 10px;background:var(--paper);color:var(--ink);font:inherit;font-size:16px;min-width:0;width:100%;box-sizing:border-box}
+.buy .amt-in{display:flex;align-items:center;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r3);padding:0 10px}
+.buy .amt-in input{border:0;padding:8px 0;font-family:var(--mono);font-weight:700;font-size:18px;background:transparent}
+.buy .amt-in span{font-weight:700}
+.buy .qk{display:flex;gap:6px;flex-wrap:wrap}
+.buy .qk button{border:1px dashed var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:4px 9px;font-family:var(--mono);font-size:12px;cursor:pointer}
+.buy .mth{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.buy .mth button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:var(--r3);padding:7px 4px;font:inherit;font-size:13px;cursor:pointer}
+.buy .mth button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.buy .krw{font-size:14px;font-weight:700}
+.buy .krw small{font-weight:400;color:var(--muted);margin-left:4px}
+.buy .hist{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
 </style>
 
 </head>
@@ -1379,7 +1395,53 @@ header .src{flex:1 1 140px;min-width:0}
     state.shops = SEED_VND.map(([no, goods, price, tag], i) => ({id: "s" + i, code: "VND", place: "한시장", no, goods, price, tag, done: false}));
     store.set("tw.shops", state.shops);
   }
-  let shopFilter = "all", editingShop = null;
+  let shopFilter = "all", editingShop = null, buyShop = null, buyMethod = null;
+  function buyForm(x, bought){
+    const c = cur(), f = document.createElement("form"); f.className = "buy";
+    if (!buyMethod) buyMethod = state.method || "cash";
+    f.innerHTML = `
+      <input id="buyItem" maxlength="30" placeholder="산 것 (예: 반바지 2개)" autocomplete="off">
+      <div class="amt-in"><input id="buyAmt" inputmode="numeric" autocomplete="off" placeholder="낸 금액" aria-label="낸 금액"><span></span></div>
+      <div class="qk"></div>
+      <div class="mth" role="group" aria-label="결제수단"></div>
+      <div class="krw" id="buyKrw" aria-live="polite"></div>
+      <button class="primary" type="submit">이 가게 지출로 기록</button>
+      <div class="hist"></div>`;
+    f.querySelector(".amt-in span").textContent = c.unit;
+    const amt = f.querySelector("#buyAmt"), out = f.querySelector("#buyKrw");
+    const calc = () => {
+      const v = parse(amt.value), r = methodRate(c.code, buyMethod).rate;
+      out.textContent = v > 0 ? `≈ ${fmt(Math.round(v * r))}원` : "금액을 넣으면 원화로 보여줘요";
+      if (v > 0){ const sm = document.createElement("small"); sm.textContent = METHODS[buyMethod] + (buyMethod === "gln" ? " 예상" : ""); out.append(sm); }
+    };
+    amt.addEventListener("input", () => { const n = amt.value.replace(/[^\d]/g,""); amt.value = n ? Number(n).toLocaleString("ko-KR") : ""; calc(); });
+    const qk = f.querySelector(".qk");
+    (c.code === "VND" ? [50000,100000,200000,500000] : c.quick).forEach(v => {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = "+" + (c.code === "VND" ? (v/10000) + "만" : fmt(v));
+      b.onclick = () => { amt.value = fmt(parse(amt.value) + v); calc(); }; qk.append(b);
+    });
+    const mth = f.querySelector(".mth");
+    ["cash","travel","gln"].forEach(m => {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = METHODS[m]; b.setAttribute("aria-pressed", m === buyMethod);
+      b.onclick = () => { buyMethod = m; mth.querySelectorAll("button").forEach(y => y.setAttribute("aria-pressed", y === b)); calc(); };
+      mth.append(b);
+    });
+    const hist = f.querySelector(".hist");
+    bought.slice().sort((a,b)=>b.ts-a.ts).forEach(e => { const d = document.createElement("div"); d.textContent = `${when(e.ts)} · ${e.item || "구매"} · ${fmt(e.amount, c.dp)}${c.unit} · ${METHODS[e.method]}`; hist.append(d); });
+    calc();
+    f.addEventListener("submit", ev => {
+      ev.preventDefault();
+      if (!activeTrip()){ openTripForm(null); return; }
+      const v = parse(amt.value); if (!(v > 0)){ amt.focus(); return; }
+      const item = f.querySelector("#buyItem").value.trim(), r = methodRate(c.code, buyMethod).rate;
+      state.expenses.push({id: Date.now()+Math.random(), tripId: state.active, code: c.code, method: buyMethod, amount: v, krw: v * r,
+        confirmed: buyMethod !== "gln", cat: "shopping", shopId: x.id, item,
+        memo: `${x.place ? x.place + " " : ""}#${x.no}${item ? " " + item : ""}`, ts: Date.now()});
+      x.done = true; buyShop = null; store.set("tw.shops", state.shops); save();
+      renderShops(); renderWallets(); renderList(); renderTrip();
+    });
+    return f;
+  }
   const shopNum = x => parseInt(String(x.no).replace(/[^\d].*$/, ""), 10) || 9999;
   function renderShops(){
     const c = cur(), ul = $("shopList"); ul.textContent = "";
@@ -1408,7 +1470,17 @@ header .src{flex:1 1 140px;min-width:0}
       const ed = document.createElement("button"); ed.type = "button"; ed.className = "ed"; ed.textContent = "수정";
       ed.onclick = () => openShopForm(x);
       acts.append(ck, ed);
-      li.append(no, mid, acts); ul.append(li);
+      const bought = E().filter(e => e.shopId === x.id);
+      if (bought.length){
+        const sp = document.createElement("div"); sp.className = "spent";
+        sp.textContent = `이번 여행 ${bought.length}건 · ${fmt(bought.reduce((a,e)=>a+e.amount,0), c.dp)}${c.unit} (≈ ${fmt(Math.round(bought.reduce((a,e)=>a+e.krw,0)))}원)`;
+        mid.append(sp);
+      }
+      no.classList.add("tap"); mid.classList.add("tap");
+      no.onclick = mid.onclick = () => { buyShop = buyShop === x.id ? null : x.id; renderShops(); if (buyShop) setTimeout(() => { const i = $("buyAmt"); if (i){ i.focus(); i.scrollIntoView({block:"center"}); } }, 0); };
+      li.append(no, mid, acts);
+      if (buyShop === x.id) li.append(buyForm(x, bought));
+      ul.append(li);
     });
   }
   function openShopForm(x){
