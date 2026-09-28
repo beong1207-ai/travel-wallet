@@ -1,5 +1,5 @@
 // 여행 환율수첩 서비스 워커: 오프라인에서도 앱이 열리게 저장해 둬요.
-const VERSION = "v3";
+const VERSION = "v4";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

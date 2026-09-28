@@ -270,6 +270,35 @@ h1{font-size:24px}
 .stay-sum{font-size:13px;font-weight:500}
 .ticket.prepaid .t-top{opacity:.35;pointer-events:none}
 .badge.prepaid{background:var(--hero);color:#fff}
+.pick-t{flex:1;display:flex;flex-direction:column;min-width:0}
+.pick-t b{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick-t small{font-size:12px;color:var(--muted)}
+.opt .sub{display:block;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.opt.act{display:block;color:var(--jade);font-weight:700;grid-template-columns:none}
+.tripform form{background:var(--paper);border-radius:var(--r);box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.tripform h2{font-size:17px;margin:0}
+.tripform label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.tripform input,.tripform select{border:1px solid var(--line);border-radius:var(--r3);padding:9px 10px;background:var(--ground);color:var(--ink);font:inherit;font-size:16px;min-width:0;width:100%;box-sizing:border-box}
+.tripform .btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tripform .err{font-size:13px;color:var(--danger);min-height:0}
+.ghost-del{margin-left:auto;border:0;background:transparent;color:var(--danger);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
+.carry{background:var(--stamp);color:var(--stamp-ink);border-radius:var(--r2);padding:14px 16px;display:flex;flex-direction:column;gap:10px;font-size:14px;font-weight:500}
+.carry .btns{display:flex;gap:8px}
+.carry .secondary{border-color:var(--stamp-ink);color:var(--stamp-ink)}
+.alltrips{display:flex;flex-direction:column;gap:10px}
+.alltrips h2{font-size:16px;margin:0}
+.trip-cards{display:flex;flex-direction:column;gap:8px}
+.tcard{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;text-align:left;background:var(--paper);border:2px solid transparent;border-radius:var(--r2);box-shadow:var(--shadow);padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
+.tcard[aria-current="true"]{border-color:var(--jade)}
+.tcard .code{font-family:var(--mono);font-size:12px;font-weight:700;background:var(--jade-soft);color:var(--jade);border-radius:6px;padding:3px 6px}
+.tcard .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tcard .nm small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.tcard .tot{text-align:right;font-family:var(--mono);font-weight:800}
+.tcard .tot small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+.tcard.new{display:block;text-align:center;color:var(--jade);font-weight:700;border:2px dashed var(--line);box-shadow:none;background:transparent}
+header{flex-wrap:wrap}
+header h1{white-space:nowrap}
+header .src{flex:1 1 140px;min-width:0}
 </style>
 
 </head>
@@ -281,16 +310,42 @@ h1{font-size:24px}
   </header>
 
   <section>
-    <p class="label">어디로 가세요?</p>
     <div class="picker" id="picker">
       <button class="pick-btn" id="pickBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="menu">
-        <span class="code" id="pickCode">VND</span><b id="pickName">베트남</b><span class="chev" aria-hidden="true">▾</span>
+        <span class="code" id="pickCode">VND</span><span class="pick-t"><b id="pickName">베트남</b><small id="pickSub"></small></span><span class="chev" aria-hidden="true">▾</span>
       </button>
-      <div class="menu" id="menu" role="listbox" aria-label="여행 국가" hidden></div>
+      <div class="menu" id="menu" role="listbox" aria-label="내 여행" hidden></div>
     </div>
   </section>
 
-  <section class="trip" aria-label="여행 한눈에" data-tab="home">
+  <section class="tripform" id="tripForm" hidden>
+    <form id="tripFormEl">
+      <h2 id="tfTitle">새 여행 만들기</h2>
+      <label>여행 이름<input id="tfName" maxlength="30" autocomplete="off"></label>
+      <label>나라<select id="tfCode"></select></label>
+      <div class="stay-dates">
+        <label>시작일<input type="date" id="tfStart"></label>
+        <label>마지막 날<input type="date" id="tfEnd"></label>
+      </div>
+      <div class="err" id="tfErr" aria-live="polite"></div>
+      <div class="btns">
+        <button class="primary" type="submit">저장</button>
+        <button class="secondary" type="button" id="tfCancel">취소</button>
+        <button class="ghost-del" type="button" id="tfDelete">여행 삭제</button>
+      </div>
+      <div class="import-confirm" id="tfConfirm" hidden>
+        <div id="tfConfirmText"></div>
+        <div class="btns"><button type="button" id="tfConfirmYes">삭제</button><button type="button" class="no" id="tfConfirmNo">취소</button></div>
+      </div>
+    </form>
+  </section>
+
+  <section class="carry" id="carryBox" data-tab="home" data-cond="carry" hidden>
+    <div id="carryText"></div>
+    <div class="btns"><button class="primary" type="button" id="carryYes">가져오기</button><button class="secondary" type="button" id="carryNo">괜찮아요</button></div>
+  </section>
+
+  <section class="trip" aria-label="여행 한눈에" data-tab="home" data-cond="trip">
     <div class="dates">
       <input type="date" id="tripStart" aria-label="여행 시작일"> <span>~</span> <input type="date" id="tripEnd" aria-label="여행 마지막 날">
     </div>
@@ -302,7 +357,7 @@ h1{font-size:24px}
     <div class="note" id="tripNote"></div>
   </section>
 
-  <section aria-label="내 지갑" data-tab="home">
+  <section aria-label="내 지갑" data-tab="home" data-cond="trip">
     <p class="label">내 지갑</p>
     <div class="wallets" id="wallets"></div>
   </section>
@@ -412,6 +467,11 @@ h1{font-size:24px}
     <ul class="list" id="list" style="margin-top:10px"></ul>
   </section>
 
+  <section class="alltrips" aria-label="모든 여행" data-tab="report">
+    <h2>내 여행</h2>
+    <div class="trip-cards" id="allTrips"></div>
+  </section>
+
   <section class="report" aria-label="여행 결산" data-tab="report">
     <h2>여행 결산</h2>
     <div><h3>날짜별</h3><div class="days" id="rDays"></div><div class="hint" id="rDaysNote" style="margin-top:6px"></div></div>
@@ -476,20 +536,44 @@ h1{font-size:24px}
   };
 
   const state = {
-    code: store.get("tw.code","VND"),
     reverse: false,
     method: store.get("tw.method","cash"),
-    glnFee: store.get("tw.glnFee", 0),
     kind: "cash",
     payCur: "KRW",
     editing: null,
     expenses: store.get("tw.expenses",[]).map(e => ({method:"cash", confirmed:true, cat:"etc", ...e})),
     cat: store.get("tw.cat","food"),
-    trip: store.get("tw.trip", null) || {start: dstr(new Date()), end: addDays(dstr(new Date()), 4)},
     pendingImport: null,
     stayPay: store.get("tw.stayPay","prepaid"),
     fx: store.get("tw.fx",[]).map(x => ({kind:"cash", paidKrw: x.paidKrw ?? x.got * x.effKrwPer, ...x})),
   };
+  // ── 여행 단위 관리 ──
+  state.trips = store.get("tw.trips", null);
+  state.active = store.get("tw.active", null);
+  state._code = store.get("tw.code","VND");
+  function migrate(){
+    // 여행이 없던 시절 기록 → 첫 여행으로 묶기
+    if (state.trips && state.trips.length && !state.expenses.some(e => !e.tripId) && !state.fx.some(x => !x.tripId)) return;
+    state.trips = state.trips || [];
+    const loose = state.expenses.some(e => !e.tripId) || state.fx.some(x => !x.tripId);
+    if (!loose) return;
+    const old = store.get("tw.trip", null) || {start: dstr(new Date()), end: addDays(dstr(new Date()), 4)};
+    const code = (state.expenses.find(e => !e.tripId) || state.fx.find(x => !x.tripId) || {code: state._code}).code;
+    const t = {id: "t" + Date.now(), name: `${(COUNTRIES.find(c=>c.code===code)||{name:code}).name} 여행`, code, start: old.start, end: old.end, glnFee: store.get("tw.glnFee", 0)};
+    state.trips.push(t);
+    state.expenses.forEach(e => { if (!e.tripId) e.tripId = t.id; });
+    state.fx.forEach(x => { if (!x.tripId) x.tripId = t.id; });
+    state.active = t.id;
+  }
+  migrate();
+  const activeTrip = () => (state.trips || []).find(t => t.id === state.active) || null;
+  if (!activeTrip() && state.trips && state.trips.length) state.active = state.trips[state.trips.length-1].id;
+  Object.defineProperty(state, "code", {get(){ const t = activeTrip(); return t ? t.code : state._code; }});
+  Object.defineProperty(state, "trip", {get(){ return activeTrip() || {start: dstr(new Date()), end: addDays(dstr(new Date()), 4)}; }});
+  Object.defineProperty(state, "glnFee", {get(){ const t = activeTrip(); return t ? (t.glnFee || 0) : 0; }, set(v){ const t = activeTrip(); if (t){ t.glnFee = v; saveTrips(); } }});
+  const saveTrips = () => { store.set("tw.trips", state.trips); store.set("tw.active", state.active); };
+  const E = (id = state.active) => state.expenses.filter(e => e.tripId === id);
+  const F = (id = state.active) => state.fx.filter(x => x.tripId === id);
   state.fxCode = state.code;
 
   const $ = id => document.getElementById(id);
@@ -533,14 +617,16 @@ h1{font-size:24px}
   const nightsBetween = (a, b) => Math.max(0, Math.round((new Date(b+"T00:00:00") - new Date(a+"T00:00:00")) / 864e5));
   const when = ts => { const d = new Date(ts); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
   const rateTxt = (code, krwPer) => { const c = byCode(code), v = krwPer * c.per; return `${fmt(c.per)}${c.unit} = ${fmt(v, v < 100 ? 2 : 0)}원`; };
-  const save = () => { store.set("tw.expenses", state.expenses); store.set("tw.fx", state.fx); };
+  const save = () => { store.set("tw.expenses", state.expenses); store.set("tw.fx", state.fx); saveTrips(); };
 
-  // 지갑: 현금(환전 기록), 트래블카드(충전 기록)
-  function wallet(code, kind){
-    const recs = state.fx.filter(x => x.code === code && x.kind === kind);
+  if (state.trips) save();
+  // 지갑: 현금(환전 기록), 트래블카드(충전 기록) — 여행별
+  function wallet(code, kind, tripId = state.active){
+    const recs = F(tripId).filter(x => x.code === code && x.kind === kind);
     const got = recs.reduce((a,x)=>a+x.got,0), paidKrw = recs.reduce((a,x)=>a+x.paidKrw,0);
-    const spent = state.expenses.filter(e => e.code === code && e.method === kind).reduce((a,e)=>a+e.amount,0);
-    return {n: recs.length, got, paidKrw, rate: got > 0 ? paidKrw/got : null, spent, balance: got - spent};
+    const spent = E(tripId).filter(e => e.code === code && e.method === kind).reduce((a,e)=>a+e.amount,0);
+    const inGot = recs.filter(x => x.carry !== "out").reduce((a,x)=>a+x.got,0), inKrw = recs.filter(x => x.carry !== "out").reduce((a,x)=>a+x.paidKrw,0);
+    return {n: recs.filter(x => x.carry !== "out").length, got, paidKrw, rate: inGot > 0 ? inKrw/inGot : null, spent, balance: got - spent};
   }
   // 결제수단별 원화 환산 비율 (현지 1단위당 원)
   function methodRate(code, m){
@@ -550,28 +636,120 @@ h1{font-size:24px}
     return {rate: market(code), src: m === "cash" ? "환전 기록 없음 · 시장 환율" : "충전 기록 없음 · 시장 환율", fallback:true};
   }
 
-  /* ── 나라 선택 ── */
+  /* ── 여행 선택 ── */
+  const tripTotal = id => E(id).reduce((a,e)=>a+e.krw,0);
   function renderCountries(){
-    const c0 = cur();
-    $("pickCode").textContent = c0.code; $("pickName").textContent = c0.name;
+    const t = activeTrip(), c0 = cur();
+    $("pickCode").textContent = t ? c0.code : "+";
+    $("pickName").textContent = t ? t.name : "여행을 만들어 주세요";
+    $("pickSub").textContent = t ? `${c0.name} · ${md(t.start)}~${md(t.end)}` : "여행을 만들면 기록이 여행별로 따로 쌓여요";
     const box = $("menu"); box.textContent = "";
-    COUNTRIES.forEach(c => {
-      const b = document.createElement("button");
+    (state.trips || []).slice().sort((x,y) => y.start.localeCompare(x.start)).forEach(tr => {
+      const c = byCode(tr.code), b = document.createElement("button");
       b.type = "button"; b.className = "opt"; b.setAttribute("role","option");
-      b.setAttribute("aria-selected", c.code === state.code);
-      const s = document.createElement("span"); s.className="c"; s.textContent = c.code;
-      const n = document.createElement("span"); n.textContent = c.name;
-      const r = document.createElement("span"); r.className="r"; r.textContent = rateTxt(c.code, market(c.code)).replace(" = "," ");
-      b.append(s, n, r);
-      b.onclick = () => {
-        state.code = c.code; store.set("tw.code", c.code);
-        $("amount").value = fmt(c.quick[1]); state.reverse = false;
-        if (c.code !== state.fxCode){ $("got").value = ""; state.fxCode = c.code; }
-        closeMenu(true); renderAll();
-      };
+      b.setAttribute("aria-selected", tr.id === state.active);
+      const s1 = document.createElement("span"); s1.className="c"; s1.textContent = c.code;
+      const n = document.createElement("span"); n.textContent = tr.name;
+      const small = document.createElement("small"); small.className = "sub"; small.textContent = `${md(tr.start)}~${md(tr.end)}`; n.append(small);
+      const r = document.createElement("span"); r.className="r"; r.textContent = `${fmt(Math.round(tripTotal(tr.id)))}원`;
+      b.append(s1, n, r);
+      b.onclick = () => { switchTrip(tr.id); closeMenu(true); };
       box.append(b);
     });
+    const add = document.createElement("button"); add.type = "button"; add.className = "opt act"; add.textContent = "+ 새 여행 만들기";
+    add.onclick = () => { closeMenu(); openTripForm(null); };
+    box.append(add);
+    if (t){
+      const ed = document.createElement("button"); ed.type = "button"; ed.className = "opt act"; ed.textContent = "이 여행 이름·나라 수정";
+      ed.onclick = () => { closeMenu(); openTripForm(t); };
+      box.append(ed);
+    }
   }
+  function switchTrip(id){
+    state.active = id; saveTrips();
+    const c = cur(); $("amount").value = fmt(c.quick[1]); state.reverse = false;
+    $("got").value = ""; state.fxCode = c.code;
+    ["stayIn","stayOut","flyOut","flyBack"].forEach(k => $(k).value = "");
+    renderAll(); showTab(tab);
+  }
+
+  /* ── 여행 만들기 · 수정 ── */
+  let editingTrip = null;
+  function openTripForm(t){
+    editingTrip = t;
+    $("tripForm").hidden = false;
+    $("tfTitle").textContent = t ? "여행 수정" : "새 여행 만들기";
+    const sel = $("tfCode");
+    if (!sel.options.length) COUNTRIES.forEach(c => { const o = document.createElement("option"); o.value = c.code; o.textContent = `${c.name} (${c.code})`; sel.append(o); });
+    const today = dstr(new Date());
+    sel.value = t ? t.code : state.code;
+    $("tfStart").value = t ? t.start : today; $("tfEnd").value = t ? t.end : addDays(today, 4);
+    $("tfName").value = t ? t.name : "";
+    $("tfName").placeholder = `예: ${new Date().getFullYear()} ${byCode(sel.value).name} 여행`;
+    $("tfDelete").hidden = !t; $("tfConfirm").hidden = true; $("tfErr").textContent = "";
+    $("tfCancel").hidden = !(state.trips && state.trips.length);
+    showTab("home"); $("tfName").focus();
+  }
+  $("tfCode").addEventListener("change", () => { $("tfName").placeholder = `예: ${new Date().getFullYear()} ${byCode($("tfCode").value).name} 여행`; });
+  $("tfCancel").onclick = () => { $("tripForm").hidden = true; };
+  $("tripFormEl").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const code = $("tfCode").value, start = $("tfStart").value, end = $("tfEnd").value || start;
+    if (!start){ $("tfErr").textContent = "시작일을 골라 주세요."; return; }
+    if (end < start){ $("tfErr").textContent = "마지막 날이 시작일보다 빨라요."; return; }
+    const name = $("tfName").value.trim() || $("tfName").placeholder.replace(/^예: /, "");
+    if (editingTrip){
+      if (editingTrip.code !== code && (E(editingTrip.id).length || F(editingTrip.id).length)){ $("tfErr").textContent = "기록이 있는 여행은 나라를 바꿀 수 없어요. 새 여행을 만들어 주세요."; return; }
+      Object.assign(editingTrip, {name, code, start, end});
+    } else {
+      state.trips = state.trips || [];
+      const t = {id: "t" + Date.now(), name, code, start, end, glnFee: 0};
+      state.trips.push(t); state.active = t.id;
+    }
+    saveTrips(); $("tripForm").hidden = true; switchTrip(state.active);
+  });
+  $("tfDelete").onclick = () => {
+    const t = editingTrip; if (!t) return;
+    $("tfConfirm").hidden = false;
+    $("tfConfirmText").textContent = `"${t.name}"과 지출 ${E(t.id).length}건, 환전·충전 ${F(t.id).length}건을 지워요. 되돌릴 수 없어요.`;
+  };
+  $("tfConfirmNo").onclick = () => { $("tfConfirm").hidden = true; };
+  $("tfConfirmYes").onclick = () => {
+    const t = editingTrip; if (!t) return;
+    state.expenses = state.expenses.filter(e => e.tripId !== t.id);
+    state.fx = state.fx.filter(x => x.tripId !== t.id);
+    state.trips = state.trips.filter(x => x.id !== t.id);
+    state.active = state.trips.length ? state.trips[state.trips.length-1].id : null;
+    save(); $("tripForm").hidden = true; editingTrip = null;
+    if (!state.active) openTripForm(null);
+    switchTrip(state.active);
+  };
+
+  /* ── 남은 외화 이월 ── */
+  function carryOffer(){
+    const t = activeTrip(); if (!t || t.carryDone) return null;
+    const prev = state.trips.filter(x => x.id !== t.id && x.code === t.code && x.start < t.start).sort((a,b) => b.start.localeCompare(a.start))[0];
+    if (!prev) return null;
+    const cash = wallet(t.code, "cash", prev.id), travel = wallet(t.code, "travel", prev.id);
+    const items = [["cash", cash], ["travel", travel]].filter(([,w]) => w.balance > 0 && w.rate);
+    return items.length ? {prev, items} : null;
+  }
+  function renderCarry(){
+    const box = $("carryBox"), o = carryOffer(); box.hidden = !o || tab !== "home"; if (!o) return;
+    const c = cur();
+    $("carryText").textContent = `지난 여행 "${o.prev.name}"에서 남은 ` + o.items.map(([k,w]) => `${k==="cash"?"현금":"트래블카드"} ${fmt(w.balance, c.dp)}${c.unit}`).join(", ") + "을 이번 여행으로 가져올까요?";
+  }
+  $("carryYes").onclick = () => {
+    const o = carryOffer(), t = activeTrip(); if (!o) return;
+    o.items.forEach(([kind, w]) => {
+      const krw = w.balance * w.rate, base = {code: t.code, kind, payCur: "KRW", diff: 0, diffKrw: 0, pct: 0, effKrwPer: w.rate};
+      state.fx.push({...base, id: Date.now()+Math.random(), ts: Date.now(), tripId: o.prev.id, carry: "out", carryName: t.name, paid: -krw, got: -w.balance, paidKrw: -krw});
+      state.fx.push({...base, id: Date.now()+Math.random(), ts: Date.now(), tripId: t.id, carry: "in", carryName: o.prev.name, paid: krw, got: w.balance, paidKrw: krw});
+    });
+    t.carryDone = true; save(); renderAll(); showTab(tab);
+  };
+  $("carryNo").onclick = () => { const t = activeTrip(); if (t){ t.carryDone = true; saveTrips(); } showTab(tab); };
+
   function openMenu(){
     $("menu").hidden = false; $("pickBtn").setAttribute("aria-expanded","true");
     const sel = $("menu").querySelector('[aria-selected="true"]');
@@ -606,7 +784,7 @@ h1{font-size:24px}
       if (!w.n) tile(label, `0${c.unit}`, m === "cash" ? "환전 기록 없음" : "충전 기록 없음");
       else tile(label, `${fmt(w.balance, c.dp)}${c.unit}`, `≈ ${fmt(Math.round(w.balance * w.rate))}원`, w.balance < 0);
     });
-    const g = state.expenses.filter(e => e.code === c.code && e.method === "gln");
+    const g = E().filter(e => e.code === c.code && e.method === "gln");
     const gk = g.reduce((a,e)=>a+e.krw,0), est = g.filter(e=>!e.confirmed).length;
     tile("GLN 사용", `${fmt(Math.round(gk))}원`, g.length ? `${g.length}건${est ? ` · 예상 ${est}건` : " · 모두 확정"}` : "사용 기록 없음");
   }
@@ -684,7 +862,7 @@ h1{font-size:24px}
   };
   $("glnFee").addEventListener("change", e => {
     const v = parseFloat(e.target.value.replace(/[^\d.]/g,""));
-    state.glnFee = isFinite(v) ? Math.min(v, 10) : 0; store.set("tw.glnFee", state.glnFee);
+    state.glnFee = isFinite(v) ? Math.min(v, 10) : 0;
     renderPay(); renderResult();
   });
   $("glnActual").addEventListener("input", e => {
@@ -692,11 +870,12 @@ h1{font-size:24px}
   });
   $("logForm").addEventListener("submit", e => {
     e.preventDefault();
+    if (!activeTrip()){ openTripForm(null); return; }
     const {local, krw} = current(), pre = stayPrepaid();
     if (!(local > 0)) { (pre ? $(state.cat === "flight" ? "flyKrw" : "stayKrw") : $("amount")).focus(); return; }
     const method = pre ? "prepaid" : state.method;
     const actual = method === "gln" ? parse($("glnActual").value) : 0;
-    const rec = {id: Date.now()+Math.random(), code: state.code, method, amount: local,
+    const rec = {id: Date.now()+Math.random(), tripId: state.active, code: state.code, method, amount: local,
       krw: actual || krw, confirmed: method !== "gln" || !!actual, cat: state.cat, memo: $("memo").value.trim(), ts: Date.now()};
     if (state.cat === "stay"){
       const a = $("stayIn").value, b = $("stayOut").value;
@@ -836,16 +1015,17 @@ h1{font-size:24px}
       sm.textContent = `≈ ${fmt(Math.round(w.got*market(c0.code)))}원 · 실제 들인 돈 ${fmt(Math.round(w.paidKrw))}원 · 평균 ${rateTxt(c0.code, w.rate)}`;
       v.append(bb, sm); sum.append(k, v);
     }
-    state.fx.filter(x => x.kind === state.kind).sort((a,b)=>b.ts-a.ts).forEach(x => {
+    F().filter(x => x.kind === state.kind).sort((a,b)=>b.ts-a.ts).forEach(x => {
       const c = byCode(x.code), li = document.createElement("li"), left = document.createElement("div");
       const t = document.createElement("div"); t.style.fontWeight="500";
-      t.textContent = `${fmt(x.paid,2)}${x.payCur==="USD"?"달러":"원"} → ${fmt(x.got, c.dp)}${c.unit}`;
+      t.textContent = x.carry === "in" ? `이월 ← ${x.carryName}: ${fmt(x.got, c.dp)}${c.unit}` : x.carry === "out" ? `이월 → ${x.carryName}: ${fmt(-x.got, c.dp)}${c.unit}` : `${fmt(x.paid,2)}${x.payCur==="USD"?"달러":"원"} → ${fmt(x.got, c.dp)}${c.unit}`;
       const tk = document.createElement("div"); tk.className="meta"; tk.textContent = `받은 돈 ≈ ${fmt(Math.round(x.got * market(x.code)))}원`;
       const m = document.createElement("div"); m.className="meta";
-      m.textContent = `${c.name} · ${when(x.ts)} · 시장 대비 ${sign(x.pct)}${fmt(Math.abs(x.pct),1)}%`;
+      m.textContent = x.carry ? `${c.name} · ${when(x.ts)} · 평균 환율 유지` : `${c.name} · ${when(x.ts)} · 시장 대비 ${sign(x.pct)}${fmt(Math.abs(x.pct),1)}%`;
+      if (x.carry) tk.textContent = `≈ ${fmt(Math.round(Math.abs(x.paidKrw)))}원어치`;
       left.append(t, tk, m);
       const dd = document.createElement("div"); dd.className = "d " + (x.diff >= 0 ? "good" : "bad");
-      dd.textContent = `${sign(x.diff)}${fmt(Math.abs(Math.round(x.diffKrw)))}원`;
+      dd.textContent = x.carry ? "" : `${sign(x.diff)}${fmt(Math.abs(Math.round(x.diffKrw)))}원`;
       const del = document.createElement("button"); del.className="del"; del.type="button"; del.textContent="×";
       del.setAttribute("aria-label","기록 삭제");
       del.onclick = () => { state.fx = state.fx.filter(y => y.id !== x.id); save(); renderFxList(); renderWallets(); renderPay(); renderResult(); renderTrip(); };
@@ -866,7 +1046,8 @@ h1{font-size:24px}
   $("payUSD").onclick = () => { if (state.payCur!=="USD"){ state.payCur="USD"; $("paid").value="100"; renderFxInputs(); renderFx(); } };
   $("fxSave").onclick = () => {
     const r = fxCalc(); if (!r) return;
-    state.fx.push({id:Date.now()+Math.random(), ts:Date.now(), code:r.c.code, kind:state.kind, payCur:r.payCur, paid:r.paid, got:r.got,
+    if (!activeTrip()){ openTripForm(null); return; }
+    state.fx.push({id:Date.now()+Math.random(), ts:Date.now(), tripId: state.active, code:r.c.code, kind:state.kind, payCur:r.payCur, paid:r.paid, got:r.got,
       paidKrw:r.paidKrw, diff:r.diff, diffKrw:r.diffKrw, pct:r.pct, effKrwPer:r.eff});
     save(); renderFxList(); renderWallets(); renderPay(); renderResult(); renderTrip();
   };
@@ -874,7 +1055,7 @@ h1{font-size:24px}
   /* ── 지출 기록 ── */
   function renderList(){
     const list = $("list"); list.textContent = "";
-    const items = state.expenses.slice().sort((a,b) => expDate(b).localeCompare(expDate(a)) || b.ts - a.ts);
+    const items = E().sort((a,b) => expDate(b).localeCompare(expDate(a)) || b.ts - a.ts);
     if (!items.length){
       const li = document.createElement("li"); li.className = "empty"; li.style.display="block";
       li.textContent = "아직 기록이 없어요. 결제수단을 고르고 금액을 넣은 뒤 ‘지출 기록’을 누르면 여기에 쌓여요.";
@@ -917,11 +1098,11 @@ h1{font-size:24px}
       }
       list.append(li);
     });
-    const total = state.expenses.reduce((s,e) => s + e.krw, 0);
+    const total = E().reduce((s,e) => s + e.krw, 0);
     $("total").textContent = fmt(Math.round(total)) + "원";
-    const parts = Object.keys(METHODS).map(m => [m, state.expenses.filter(e=>e.method===m).reduce((a,e)=>a+e.krw,0)])
+    const parts = Object.keys(METHODS).map(m => [m, E().filter(e=>e.method===m).reduce((a,e)=>a+e.krw,0)])
       .filter(([,v]) => v > 0).map(([m,v]) => `${METHODS[m]} ${fmt(Math.round(v))}원`);
-    $("spendCount").textContent = state.expenses.length ? `${state.expenses.length}건 · ${parts.join(" · ")}` : "";
+    $("spendCount").textContent = E().length ? `${E().length}건 · ${parts.join(" · ")}` : "";
   }
 
   /* ── 카테고리 ── */
@@ -958,7 +1139,7 @@ h1{font-size:24px}
   function renderTrip(){
     $("tripStart").value = state.trip.start; $("tripEnd").value = state.trip.end;
     const days = tripDays(), today = dstr(new Date());
-    const list = state.expenses.filter(inTrip), total = list.reduce((a,e)=>a+e.krw,0);
+    const list = E(), total = list.reduce((a,e)=>a+e.krw,0);
     const idx = days.indexOf(today);
     let label, elapsed;
     if (today < state.trip.start){ const n = Math.round((new Date(state.trip.start) - new Date(today))/864e5); label = `D-${n}`; elapsed = 0; }
@@ -971,13 +1152,13 @@ h1{font-size:24px}
     $("tripAvgLabel").textContent = flights ? "하루 평균 (항공 제외)" : "하루 평균";
     $("tripAvg").textContent = fmt(Math.round((total - flights) / Math.max(elapsed || days.length, 1))) + "원";
     $("tripBar").style.width = (elapsed / days.length * 100) + "%";
-    const est = list.filter(e => !e.confirmed).length, out = state.expenses.length - list.length;
+    const est = list.filter(e => !e.confirmed).length, out = list.filter(e => !inTrip(e)).length;
     const notes = [`${list.length}건`];
     if (flights) notes.push(`항공 ${fmt(Math.round(flights))}원`);
     if (stays) notes.push(`숙소 ${fmt(Math.round(stays))}원`);
     if (flights || stays) notes.push(`현지 지출 ${fmt(Math.round(total - flights - stays))}원`);
     if (est) notes.push(`GLN 예상 금액 ${est}건 포함`);
-    if (out) notes.push(`여행 기간 밖 기록 ${out}건은 빠져 있어요`);
+    if (out) notes.push(`여행 기간 밖 날짜 ${out}건 포함`);
     $("tripNote").textContent = notes.join(" · ");
 
     // 날짜별 막대
@@ -1001,11 +1182,11 @@ h1{font-size:24px}
     // 환전·충전 요약
     const dl = $("rFx"); dl.textContent = "";
     const add = (k, v, cls) => { const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; if (cls) dd.className = cls; dl.append(dt, dd); };
-    const fxs = state.fx;
+    const fxs = F();
     const paid = fxs.reduce((a,x)=>a+x.paidKrw,0), loss = fxs.reduce((a,x)=>a+x.diffKrw,0);
     add("환전·충전에 쓴 원화", `${fmt(Math.round(paid))}원 (${fxs.length}회)`);
     add("시장 환율 대비", `${sign(loss)}${fmt(Math.abs(Math.round(loss)))}원`, loss < 0 ? "bad" : "good");
-    const codes = [...new Set(state.fx.map(x => x.code))];
+    const codes = [...new Set(F().map(x => x.code))];
     codes.forEach(code => ["cash","travel"].forEach(m => {
       const w = wallet(code, m); if (!w.n) return;
       const c = byCode(code);
@@ -1015,7 +1196,8 @@ h1{font-size:24px}
   function setTrip(){
     let s0 = $("tripStart").value || state.trip.start, e0 = $("tripEnd").value || state.trip.end;
     if (e0 < s0) e0 = s0;
-    state.trip = {start: s0, end: e0}; store.set("tw.trip", state.trip); renderTrip();
+    const t = activeTrip(); if (!t) return;
+    t.start = s0; t.end = e0; saveTrips(); renderTrip(); renderCountries(); renderAllTrips();
   }
   $("tripStart").addEventListener("change", setTrip);
   $("tripEnd").addEventListener("change", setTrip);
@@ -1023,7 +1205,7 @@ h1{font-size:24px}
   /* ── 백업 ── */
   const status = (msg, err) => { $("bkStatus").textContent = msg; $("bkStatus").classList.toggle("err", !!err); };
   const backupData = () => ({app:"여행 환율수첩", version:1, savedAt: new Date().toISOString(),
-    trip: state.trip, code: state.code, glnFee: state.glnFee, expenses: state.expenses, fx: state.fx});
+    version2: true, trips: state.trips || [], active: state.active, expenses: state.expenses, fx: state.fx});
   async function offer(filename, data){
     const type = filename.endsWith(".csv") ? "text/csv" : "application/json";
     try {
@@ -1042,13 +1224,14 @@ h1{font-size:24px}
   $("bkJson").onclick = () => offer(`여행환율수첩_백업_${dstr(new Date())}.json`, JSON.stringify(backupData(), null, 1));
   $("bkCsv").onclick = () => {
     const q = v => `"${String(v).replace(/"/g,'""')}"`;
-    const rows = [["날짜","기록 시간","나라","카테고리","결제수단","내용","현지 금액","통화","원화","확정 여부","숙박"]];
+    const tname = id => ((state.trips||[]).find(t => t.id === id) || {name:""}).name;
+    const rows = [["여행","날짜","기록 시간","나라","카테고리","결제수단","내용","현지 금액","통화","원화","확정 여부","숙박"]];
     state.expenses.slice().sort((a,b)=>a.ts-b.ts).forEach(e => {
       const d = new Date(e.ts), c = byCode(e.code), ed = expDate(e);
-      rows.push([ed, `${dstr(d)} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`, c.name, CATS[e.cat]||"기타", METHODS[e.method], e.memo||"", Math.round(e.amount*100)/100, e.code, Math.round(e.krw), e.confirmed ? "확정" : "예상", e.nights ? `${e.nights}박` : e.cat === "flight" ? (e.back ? `${e.date}~${e.back} 왕복` : `${e.date} 편도`) : ""]);
+      rows.push([tname(e.tripId), ed, `${dstr(d)} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`, c.name, CATS[e.cat]||"기타", METHODS[e.method], e.memo||"", Math.round(e.amount*100)/100, e.code, Math.round(e.krw), e.confirmed ? "확정" : "예상", e.nights ? `${e.nights}박` : e.cat === "flight" ? (e.back ? `${e.date}~${e.back} 왕복` : `${e.date} 편도`) : ""]);
     });
-    rows.push([]); rows.push(["환전·충전 기록"]); rows.push(["날짜","종류","나라","낸 돈","낸 통화","받은 돈","통화","낸 돈 원화","시장 대비 원화"]);
-    state.fx.slice().sort((a,b)=>a.ts-b.ts).forEach(x => rows.push([dstr(new Date(x.ts)), x.kind==="travel"?"트래블카드 충전":"현금 환전", byCode(x.code).name, x.paid, x.payCur, x.got, x.code, Math.round(x.paidKrw), Math.round(x.diffKrw)]));
+    rows.push([]); rows.push(["환전·충전 기록"]); rows.push(["여행","날짜","종류","나라","낸 돈","낸 통화","받은 돈","통화","낸 돈 원화","시장 대비 원화"]);
+    state.fx.slice().sort((a,b)=>a.ts-b.ts).forEach(x => rows.push([tname(x.tripId), dstr(new Date(x.ts)), (x.carry ? "이월 · " : "") + (x.kind==="travel"?"트래블카드 충전":"현금 환전"), byCode(x.code).name, x.paid, x.payCur, x.got, x.code, Math.round(x.paidKrw), Math.round(x.diffKrw)]));
     offer(`여행환율수첩_${dstr(new Date())}.csv`, "﻿" + rows.map(r => r.map(q).join(",")).join("\r\n"));
   };
   $("bkFile").addEventListener("change", e => {
@@ -1069,15 +1252,22 @@ h1{font-size:24px}
     const d = state.pendingImport; if (!d) return;
     const w = document.createElement("div"); w.className = "import-confirm";
     const t = document.createElement("div");
-    t.textContent = `지출 ${d.expenses.length}건, 환전·충전 ${d.fx.length}건이 든 백업이에요. 불러오면 지금 기록(지출 ${state.expenses.length}건, 환전·충전 ${state.fx.length}건)을 대체해요.`;
+    t.textContent = `${d.trips ? `여행 ${d.trips.length}개, ` : ""}지출 ${d.expenses.length}건, 환전·충전 ${d.fx.length}건이 든 백업이에요. 불러오면 지금 기록(여행 ${(state.trips||[]).length}개, 지출 ${state.expenses.length}건)을 대체해요.`;
     const btns = document.createElement("div"); btns.className = "btns";
     const ok = document.createElement("button"); ok.type = "button"; ok.textContent = "불러오기";
     const no = document.createElement("button"); no.type = "button"; no.className = "no"; no.textContent = "취소";
     ok.onclick = () => {
       state.expenses = d.expenses.map(e => ({method:"cash", confirmed:true, cat:"etc", ...e}));
       state.fx = d.fx.map(x => ({kind:"cash", ...x}));
-      if (d.trip && d.trip.start) { state.trip = d.trip; store.set("tw.trip", d.trip); }
-      if (typeof d.glnFee === "number") { state.glnFee = d.glnFee; store.set("tw.glnFee", d.glnFee); }
+      if (d.trips){ state.trips = d.trips; state.active = d.active; }
+      else {
+        state.trips = [];
+        if (d.trip && d.trip.start) store.set("tw.trip", d.trip);
+        if (typeof d.glnFee === "number") store.set("tw.glnFee", d.glnFee);
+        if (d.code) state._code = d.code;
+        migrate();
+      }
+      if (!activeTrip() && state.trips.length) state.active = state.trips[state.trips.length-1].id;
       save(); state.pendingImport = null; renderImport(); renderAll(); status("백업을 불러왔어요.");
     };
     no.onclick = () => { state.pendingImport = null; renderImport(); status(""); };
@@ -1088,17 +1278,38 @@ h1{font-size:24px}
   let tab = store.get("tw.tab","home");
   function showTab(t){
     tab = t; store.set("tw.tab", t);
-    document.querySelectorAll("[data-tab]").forEach(el => el.hidden = el.dataset.tab !== t);
+    const conds = {trip: () => !!activeTrip(), carry: () => !!carryOffer()};
+    document.querySelectorAll("[data-tab]").forEach(el => el.hidden = el.dataset.tab !== t || (el.dataset.cond && !conds[el.dataset.cond]()));
     document.querySelectorAll(".tabbar button").forEach(b => b.setAttribute("aria-selected", b.dataset.go === t));
     window.scrollTo(0, 0);
   }
   document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => showTab(b.dataset.go));
 
-  function renderAll(){ renderWhen(); renderCats(); renderTrip(); renderCountries(); renderWallets(); renderPay(); renderQuick(); renderResult(); renderFxInputs(); renderFx(); renderFxList(); renderList(); }
+  function renderAllTrips(){
+    const box = $("allTrips"); box.textContent = "";
+    (state.trips || []).slice().sort((a,b) => b.start.localeCompare(a.start)).forEach(t => {
+      const c = byCode(t.code), total = tripTotal(t.id), days = nightsBetween(t.start, t.end) + 1;
+      const fl = E(t.id).filter(e => e.cat === "flight").reduce((a,e)=>a+e.krw,0);
+      const b = document.createElement("button"); b.type = "button"; b.className = "tcard"; b.setAttribute("aria-current", t.id === state.active);
+      const cd = document.createElement("span"); cd.className = "code"; cd.textContent = c.code;
+      const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = t.name;
+      const sm = document.createElement("small"); sm.textContent = `${t.start.replace(/-/g,".")} ~ ${md(t.end)} · ${days}일`; nm.append(sm);
+      const tot = document.createElement("span"); tot.className = "tot"; tot.textContent = fmt(Math.round(total)) + "원";
+      const ts = document.createElement("small"); ts.textContent = `하루 ${fmt(Math.round((total - fl) / days))}원`; tot.append(ts);
+      b.append(cd, nm, tot);
+      b.onclick = () => switchTrip(t.id);
+      box.append(b);
+    });
+    const n = document.createElement("button"); n.type = "button"; n.className = "tcard new"; n.textContent = "+ 새 여행 만들기";
+    n.onclick = () => openTripForm(null); box.append(n);
+  }
+
+  function renderAll(){ renderCarry(); renderAllTrips(); renderWhen(); renderCats(); renderTrip(); renderCountries(); renderWallets(); renderPay(); renderQuick(); renderResult(); renderFxInputs(); renderFx(); renderFxList(); renderList(); }
 
   $("foot").textContent = `시장 환율 출처: ExchangeRate-API (open.er-api.com), 하루 한 번 갱신되는 기준 환율이에요. 현금·트래블카드 지출은 내가 환전·충전한 평균 환율로, GLN은 시장 환율에 수수료를 더해 계산해요. 카드 단말기에서 원화(KRW) 결제를 묻는다면 현지 통화로 결제하는 게 보통 유리해요. 기록은 이 기기의 브라우저에만 저장됩니다.`;
   renderAll();
   showTab(tab);
+  if (!activeTrip()) openTripForm(null);
   refreshRates();
   window.addEventListener("online", () => refreshRates(true));
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshRates(); });
