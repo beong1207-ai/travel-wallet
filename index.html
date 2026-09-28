@@ -305,10 +305,11 @@ header .src{flex:1 1 140px;min-width:0}
 .shop .seg{align-self:flex-start}
 .shop .seg button[aria-pressed="true"]{background:var(--jade);color:#fff}
 .shops{list-style:none;margin:0;padding:0;background:var(--paper);border-radius:var(--r2);box-shadow:var(--shadow)}
-.shops li{display:grid;grid-template-columns:64px 1fr auto;gap:2px 12px;align-items:start;padding:12px 14px;border-top:1px solid var(--line)}
+.shops li{display:grid;grid-template-columns:minmax(58px,auto) 1fr auto;gap:2px 12px;align-items:start;padding:12px 14px;border-top:1px solid var(--line)}
 .shops li:first-child{border-top:0}
 .shops li.done{opacity:.5}
-.shops .no{font-family:var(--mono);font-weight:800;font-size:17px;color:var(--jade);line-height:1.3;overflow-wrap:anywhere}
+.shops .no{font-family:var(--mono);font-weight:800;font-size:17px;color:var(--jade);line-height:1.3;white-space:nowrap}
+.shops .no .to{display:block;font-size:14px;font-weight:700;opacity:.8}
 .shops .no small{display:block;font-family:var(--sans);font-weight:400;font-size:11px;color:var(--muted)}
 .shops .gd{font-weight:700;font-size:15px}
 .shops .pr{font-family:var(--mono);font-size:13px;color:var(--ink);margin-top:2px}
@@ -1391,7 +1392,9 @@ header .src{flex:1 1 140px;min-width:0}
     if (!list.length){ const li = document.createElement("li"); li.className = "empty"; li.textContent = mine.length ? "다 둘러봤어요!" : "아직 저장한 가게가 없어요. ‘+ 가게 추가’로 넣어 보세요."; ul.append(li); return; }
     list.forEach(x => {
       const li = document.createElement("li"); if (x.done) li.className = "done";
-      const no = document.createElement("div"); no.className = "no"; no.textContent = "#" + x.no;
+      const no = document.createElement("div"); no.className = "no";
+      const [n1, n2] = String(x.no).split(/\s*[~\-]\s*/); no.textContent = "#" + n1;
+      if (n2){ const to = document.createElement("span"); to.className = "to"; to.textContent = "~" + n2; no.append(to); }
       if (places.length > 1 && x.place){ const sm = document.createElement("small"); sm.textContent = x.place; no.append(sm); }
       const mid = document.createElement("div");
       const gd = document.createElement("div"); gd.className = "gd"; gd.textContent = x.goods || "-";
